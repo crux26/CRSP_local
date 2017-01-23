@@ -1,0 +1,14 @@
+
+- NOPRINT 옵션이 기본임.
+
+- dataset이 매우 크기 때문에, 처음부터 끝까지 실행할 경우
+
+시간이 매우 오래 걸리므로, PRINT한다는 것 자체가 굉장히 비효율적.
+
+
+- PRINT해야 할 시에는 myMacro에서 해당 파일 연 다음에,
+구조를 복사해서 NOPRINT부분만 없애서 사용하기
+
+
+- 몇몇 파일에는 print= 를 macro parameter로 받게 되어있으나,
+다 print=0으로 해서 print되지 않게 하기
