@@ -1,8 +1,0 @@
-
-<SAS Programming for Data Mining>
-
-http://www.sas-programming.com/2011/08/rolling-analysis-of-time-series.html
-
-Python과의 연계된 내용 있음
-
-일반적으로 SAS가 아닌 Python, MATLAB등에서 다루는 내용들을 SAS로 구현한 것도 있음
