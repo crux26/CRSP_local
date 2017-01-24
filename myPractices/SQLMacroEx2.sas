@@ -14,6 +14,3 @@ proc sql outobs=12;
 quit;
 
 %put _user_;
-
-
-

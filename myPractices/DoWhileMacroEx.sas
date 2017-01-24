@@ -1,4 +1,4 @@
-/*Below do NOT work*/
+/*Comment below do NOT work*/
 /*	%let i=i+1;*/
 /*	%let i=&i+1;*/
 
