@@ -1,28 +1,22 @@
-libname sql 'D:\Dropbox\SAS_scripts\SQL Sample dataset';
+libname sql 'D:\Dropbox\GitHub\CRSP_local\SQL Sample dataset';
 
-proc sql outobs=12;
-title 'Mean Temperatures for World Cities';
-select City, Country, mean(AvgHigh, AvgLow)
-as MeanTemp
-from sql.worldtemps
-where calculated MeanTemp gt 75
-order by MeanTemp desc;
-
+proc sql;
+	create index area
+		on sql.newcountries(area);
 quit;
 
-proc sql outobs=12;
-title 'Mean Temperatures for World Cities';
-select City, Country, max(AvgHigh)
-as MaxTemp
-from sql.worldtemps;
-
+proc sql;
+create index places
+on sql.newcountries(name, continent);
 quit;
 
-proc sql outobs=12;
-title 'Mean Temperatures for World Cities';
-select City, Country, min(AvgHigh, AvgLow)
-as MinTemp
-from sql.worldtemps
-order by MinTemp desc;
-
+proc sql;
+drop index places from sql.newcountries;
 quit;
+
+proc sql;
+drop index area from sql.newcountries;
+quit;
+
+proc contents data=sql.newcountries;
+run;
