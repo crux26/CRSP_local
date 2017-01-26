@@ -79,11 +79,11 @@ proc sort data = mysas.beta;
 by year permno;
 run;
 
-%include myMacro('SummRegResult.sas');
-%SummRegResult(data=mysas.beta, out=mysas.PrdcStat, var=intercept vwretd, by=year);
+%include myMacro('SummRegResult_custom.sas');
+%SummRegResult_custom(data=mysas.beta, out=mysas.PrdcStat, var=intercept vwretd, by=year);
 
 %include myMacro('Trans.sas');
-%Trans(data=mysas.PrdcStat, out=mysas.PrdcStat2, var=intercept vwretd, id=_STAT_, by=year );
+%Trans(data=mysas.PrdcStat, out=mysas.PrdcStat2, var=intercept vwretd, id=stat, by=year );
 
 proc sort data=mysas.PrdcStat2;
 by coeff year;
