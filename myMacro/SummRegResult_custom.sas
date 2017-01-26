@@ -15,16 +15,16 @@ run;
 data tmp3;
 set tmp2;
 varname = scan(_name_,1,'_');
-stat=scan(_name_,2,'_');
+_stat_=scan(_name_,2,'_');
 drop _name_ _label_;
 run;
 
 proc sort data=tmp3;
-by stat;
+by _stat_;
 run;
 
 proc transpose data=tmp3 out=tmp4;
-by stat;
+by _stat_;
 id varname;
 run;
 

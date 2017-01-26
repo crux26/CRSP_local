@@ -55,7 +55,7 @@ run;
 %SummRegResult_custom(data=mysas.beta, out=mysas.PrdcStat, var=intercept vwretd, by=year);
 
 %include myMacro('Trans.sas');
-%Trans(data=mysas.PrdcStat, out=mysas.PrdcStat, var=intercept vwretd, id=stat, by=year );
+%Trans(data=mysas.PrdcStat, out=mysas.PrdcStat, var=intercept vwretd, id=_STAT_, by=year );
 
 proc sort data=mysas.PrdcStat;
 by coeff year;
