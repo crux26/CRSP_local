@@ -8,7 +8,7 @@ libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname ff "D:\Dropbox\WRDS\ff\sasdata";
 libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
+libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 
 
 %let begdate = '01JAN1988'd;

@@ -2,7 +2,7 @@ libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname ff "D:\Dropbox\WRDS\ff\sasdata";
 libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
+libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 
 %let begdate = '01JAN1988'd;
 %let enddate = '31DEC2012'd;
@@ -52,10 +52,49 @@ by year permno;
 run;
 
 proc means data=mysas.beta noprint nway;
-output out=mysas.PrdcStat(drop=_TYPE_ _FREQ_);
+output out=mysas.PrdcStat(drop=_TYPE_ _FREQ_)  ;
 var intercept vwretd;
 by year;
 run;
+
+/**/
+/**/
+
+proc means data=mysas.beta noprint nway;
+output out=mysas.PrdcStat2(drop=_TYPE_ _FREQ_) 
+mean= std= skew= kurt=
+min= p5= p25= median= p75= p95= max= n= /autoname;
+var intercept vwretd;
+by year;
+run;
+
+proc transpose data=mysas.PrdcStat2 out=mysas.temp;
+/*by year;*/
+run;
+
+data mysas.temp1;
+set mysas.temp;
+varname=scan(_name_,1,'_');
+stat=scan(_name_,2,'_');
+drop _name_;
+run;
+
+proc sort data=mysas.temp1;
+by stat;
+run;
+
+proc transpose data=mysas.temp1 out=mysas.temp3(drop=_name_);
+by stat ;
+id varname;
+var col1;
+run;
+
+/*ods output summary=with_stackods(drop=_control_);*/
+/*proc means data=mysas.beta stackodsoutput noprint nway mean std skew kurt min p5 p25 median p75 p95 max n;*/
+/*var intercept vwretd;*/
+/*by year;*/
+/*run;*/
+
 
 %include myMacro('SummRegResult.sas');
 %SummRegResult(data=mysas.beta, out=mysas.PrdcStat, var=intercept vwretd, by=year);
