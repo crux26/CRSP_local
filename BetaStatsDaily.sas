@@ -1,9 +1,5 @@
 /*Converting day to month's end not needed for daily data*/
 
-/*"nonMissing" not working properly*/
-/*%include myMacro('nonMissing.sas');*/
-/*%nonMissing(data=mysas.dsf_smaller2, set=mysas.dsf_smaller, var=prc ret vwretd ewretd);*/
-
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname ff "D:\Dropbox\WRDS\ff\sasdata";
@@ -48,7 +44,11 @@ where 10000 <= permno <= 15000 &
 run;
 /*------------------------------------------------*/
 /*------------------------------------------------*/
-/**/
+
+/*%include myMacro('nonMissing.sas');*/
+/*%nonMissing(data=mysas.dsf_mrgd2, set=mysas.dsf_mrgd(keep=permno date vol prc ret vwretd ewretd), var=prc ret vwretd ewretd);*/
+/*Above macro not used below as it cannot allow year, month, prc calculation*/
+
 data mysas.dsf_mrgd2; 
 set mysas.dsf_mrgd(keep=permno date vol prc ret vwretd ewretd);
 year = year(date);
