@@ -1,7 +1,8 @@
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
+libname ff "D:\Dropbox\WRDS\ff\sasdata";
 libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
+libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 
 %let begdate = '01JAN1988'd;
 %let enddate = '31DEC2012'd;
@@ -50,3 +51,17 @@ proc datasets lib=mysas nolist;
 change MktCap2 = MktCap;
 quit;
 run;
+
+proc sort data=mysas.MktCap;
+by year month permno;
+run;
+
+
+%include myMacro('SummRegResult_custom.sas');
+%SummRegResult_custom(data=mysas.MktCap, out=mysas.MktCapPrdcStat, var=MktCap, by=year);
+
+%include myMacro('Trans.sas');
+%Trans(data=mysas.MktCapPrdcStat, out=mysas.MktCapPrdcStat, var=MktCap, id=_STAT_, by=year );
+
+%include myMacro('ObsAvg.sas');
+%ObsAvg(data=mysas.MktCapPrdcStat, out=mysas.MktCapAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);

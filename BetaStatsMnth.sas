@@ -52,10 +52,10 @@ by year permno;
 run;
 
 %include myMacro('SummRegResult_custom.sas');
-%SummRegResult_custom(data=mysas.beta, out=mysas.PrdcStat, var=intercept vwretd, by=year);
+%SummRegResult_custom(data=mysas.beta, out=mysas.BetaPrdcStat, var=intercept vwretd, by=year);
 
 %include myMacro('Trans.sas');
-%Trans(data=mysas.PrdcStat, out=mysas.PrdcStat, var=intercept vwretd, id=_STAT_, by=year );
+%Trans(data=mysas.BetaPrdcStat, out=mysas.BetaPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
 
 proc sort data=mysas.PrdcStat;
 by coeff year;
@@ -63,7 +63,7 @@ run;
 
 /*Avg of year is dropped as it is meaningless*/
 %include myMacro('ObsAvg.sas');
-%ObsAvg(data=mysas.PrdcStat, out=mysas.AvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
+%ObsAvg(data=mysas.BetaPrdcStat, out=mysas.BetaAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
 
 
 /**/
