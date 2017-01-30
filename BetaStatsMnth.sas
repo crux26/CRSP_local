@@ -16,7 +16,7 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 proc sql;
 create table mysas.msf_mrgd_whole
 as
-select a.*, b.vwretd as vwretd, b.ewretd as ewretd,  c.mktrf as mktrf, c.smb as smb, c.hml as hml, c.umd as umd, c.rf as rf
+select a.*, b.vwretd as vwretd, b.ewretd as ewretd, c.mktrf as mktrf, c.smb as smb, c.hml as hml, c.umd as umd, c.rf as rf
 from
 	mysas.msf as a
 left join
@@ -34,8 +34,8 @@ year = year(date);
 month = month(date);
 
 vwretd = vwretd - rf;
-ret = ret - rf;
 ewretd = ewretd - rf;
+ret = ret - rf;
 
 where ret ^= . &
 vwretd ^=. &
