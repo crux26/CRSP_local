@@ -104,6 +104,16 @@ run;
 %include myMacro('ObsAvg.sas');
 %ObsAvg(data=mysas.BetaPrdcStat, out=mysas.BetaAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
 
+data mysas.BetaPrdcStat;
+retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
+set mysas.BetaPrdcStat;
+run;
+
+data mysas.BetaAvgStat;
+retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
+set mysas.BetaAvgStat;
+run;
+
 
 /**/
 proc datasets lib=mysas nolist;
