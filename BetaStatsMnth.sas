@@ -4,7 +4,7 @@ libname ff "D:\Dropbox\WRDS\ff\sasdata";
 libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
 libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 
-%let begdate = '01JAN1988'd;
+%let begdate = '01JUN1963'd;
 %let enddate = '31DEC2012'd;
 %let vars = ticker comnam prc ret shrout shrflg;
 %let mkt_index = vwretd;
@@ -42,38 +42,41 @@ vwretd ^=. &
 ewretd ^=. ;
 run;
 
-
-
 proc sort data=mysas.msf_mrgd_subset;
 	by permno date;
 run;
 
-/*proc means data=mysas.msf_mrgd_subset;*/
-/*run;*/
-
-proc reg data=mysas.msf_mrgd_subset
-outest =mysas.beta noprint;
-model ret = vwretd;
+data mysas.msf_mrgd_subset;
+set mysas.msf_mrgd_subset;
+ObsNum+1;
 by permno year;
+if first.year then ObsNum=1;
 run;
 
-proc sort data = mysas.beta;
+proc reg data=mysas.msf_mrgd_subset
+outest =mysas.betam noprint;
+model ret = vwretd;
+by permno year;
+where ObsNum >= 10;
+run;
+
+proc sort data = mysas.betam;
 by year permno;
 run;
 
 %include myMacro('SummRegResult_custom.sas');
-%SummRegResult_custom(data=mysas.beta, out=mysas.BetaPrdcStat, var=intercept vwretd, by=year);
+%SummRegResult_custom(data=mysas.betam, out=mysas.BetaMPrdcStat, var=intercept vwretd, by=year);
 
 %include myMacro('Trans.sas');
-%Trans(data=mysas.BetaPrdcStat, out=mysas.BetaPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
+%Trans(data=mysas.BetaMPrdcStat, out=mysas.BetaMPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
 
-proc sort data=mysas.BetaPrdcStat;
+proc sort data=mysas.BetaMPrdcStat;
 by coeff year;
 run;
 
 /*Avg of year is dropped as it is meaningless*/
 %include myMacro('ObsAvg.sas');
-%ObsAvg(data=mysas.BetaPrdcStat, out=mysas.BetaAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
+%ObsAvg(data=mysas.BetaMPrdcStat, out=mysas.BetaMAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
 
 
 /**/
