@@ -16,23 +16,33 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 proc sql;
 create table mysas.msf_mrgd_whole
 as
-select a.*, b.vwretd as vwretd, b.ewretd as ewretd
+select a.*, b.vwretd as vwretd, b.ewretd as ewretd,  c.mktrf as mktrf, c.smb as smb, c.hml as hml, c.umd as umd, c.rf as rf
 from
 	mysas.msf as a
 left join
 	mysas.msia as b
-on a.date = b.date;
+on a.date = b.date
+left join
+mysas.factors_monthly as c
+on a.date = c.dateff;
 quit;
 
 data mysas.msf_mrgd_subset;
-set mysas.msf_mrgd_whole(keep=permno date vol prc ret vwretd ewretd);
+set mysas.msf_mrgd_whole(keep=permno date vol prc ret vwretd ewretd mktrf smb hml umd rf);
 date = intnx('month', date, 1)-1;
 year = year(date);
 month = month(date);
+
+vwretd = vwretd - rf;
+ret = ret - rf;
+ewretd = ewretd - rf;
+
 where ret ^= . &
 vwretd ^=. &
 ewretd ^=. ;
 run;
+
+
 
 proc sort data=mysas.msf_mrgd_subset;
 	by permno date;
@@ -57,7 +67,7 @@ run;
 %include myMacro('Trans.sas');
 %Trans(data=mysas.BetaPrdcStat, out=mysas.BetaPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
 
-proc sort data=mysas.PrdcStat;
+proc sort data=mysas.BetaPrdcStat;
 by coeff year;
 run;
 
