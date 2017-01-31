@@ -1,3 +1,4 @@
+/*Checking Done. (17.01.31)*/
 /*Converting day to month's end not needed for daily data*/
 
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";

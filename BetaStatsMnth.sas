@@ -1,3 +1,4 @@
+/*Checking Done. (17.01.31)*/
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname ff "D:\Dropbox\WRDS\ff\sasdata";

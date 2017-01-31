@@ -1,5 +1,7 @@
-/*Last modification: 2017.01.11*/
-/*Start again from Step 2 after downloading the file &comp..secm*/
+/*Last modification: 2017.01.31*/
+/*Check Step 7 and 8 to figure out why median.sas lacks calyear variable*/
+
+/*Compustat data: moved from /d_na to /naa */
 
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
@@ -18,8 +20,6 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
 %include myMacro('FFI48.sas');
 %include myMacro('FFI49.sas');
 
-/*Do not delete above*/
-
 /* *************************************************************************** */
 /* ********* W R D S   R E S E A R C H   A P P L I C A T I O N S ************* */
 /* *************************************************************************** */
@@ -28,10 +28,14 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
 /*  Date Created : Aug 2011                                                    */
 /*  Last Modified: Aug 2011                                                    */
 /*                                                                             */
-/*  Description  : Calculate Raw and Industry Adjusted Market-to-Book Ratio    */
+/*  Description  : Calculate Raw and Industry Adjusted Book-to-Market Ratio    */
 /*                 using separately Compustat only and CRSP-Compustat Merged   */
 /*                 Compares the coverage, compute industry-level M/B ratios as */
 /*                 well as industry-adjusted M/B at the company level          */
+/*																			   */
+/* Input 		 :  &comp..funda, &comp..secm, &crsp.ccmxpf_linktable,		   */
+/* 					&crsp..msf, &crsp..stocknames 							   */
+/*																			   */
 /* Output        : The output table INDADJMB contains firm-level raw M/B Ratios*/
 /*                 using both approaches as well as their industry-adjusted    */
 /*                 counterparts                                                */
@@ -42,7 +46,7 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
 /*                 RA focuses on US companies, but can be extended to include  */
 /*                 Canadian and international companies                        */
 /*                                                                             */
-/*                 Compustat Xpressfeed Total Liabilities(LT) no longer include*/              
+/*                 Compustat Xpressfeed Total Liabilities(LT) no longer include*/
 /*                 the minority interest (MIB).Therefore, the new balance sheet*/
 /*                 equation Total Assets (AT) = Total Liabilities (LT) +       */
 /*                 Minority Interest (MIB) + Stockholders' Equity (SEQ)        */
@@ -89,31 +93,23 @@ data mysas.comp_be;
 set mysas.comp_extract2;
 run;
 
-/*Done down to here - 2017.01.11*/
-/*All the codes down there are checked, but not run*/
- 
-/*Compustat data: moved from /d_na to /naa */
-/*------------------------------------------------------------------------------------*/
-/*------------------------------------------------------------------------------------*/
-/*------------------------------------------------------------------------------------*/
-
-
 /* Step 2: calculate the market value as of Dec end                 */
 /* Curcdm is the currency in which the monthly prices are available */
 /* Primiss='P' is the primary issue with the highest average trading*/
 /* volume over a period of time                                     */
 data mysas.mvalue/view=mysas.mvalue; set &comp..secm;
-  where month(datadate)=12 and primiss='P' and fic='USA'
-  and "&begdate"d<=datadate<="&enddate"d;
-  mcap_dec=prccm*cshoq;
-  rename prccm=prc_dec;
-  keep gvkey datadate prccm curcdm mcap_dec;
+	where month(datadate)=12 and primiss='P' and fic='USA'
+ 	and "&begdate"d<=datadate<="&enddate"d;
+ 	mcap_dec=prccm*cshoq;
+ 	rename prccm=prc_dec;
+ 	keep gvkey datadate prccm curcdm mcap_dec;
 run;
    
 /* Step 3a. Create Book to Market (BM) ratios using Compustat only   */
 /* This step is needed, because sometimes PRCC_C or CSHO is missing  */
-/* in Compustat Fundamentals Annual dataset, so bring December market*/
-/* value calculated from Compustat Security file                     */
+/* in Compustat Fundamentals Annual dataset(&comp..funda), 			*/
+/* so bring December market value 									*/
+/* calculated from Compustat Security file (mvalue from &comp..secm)  */
 /* BE: book equity reported in fiscal year t                         */
 /* MCAP: market equity as of Dec of fiscal year t if available      */
 /* BM_COMP contains the B/M ratios for the entire Compustat Universe */
@@ -121,11 +117,11 @@ run;
 proc sql;
 create table mysas.bm_comp
 as select a.gvkey, a.datadate format date9., a.calyear, a.fyear, 
-          a.prcc_f, a.prcc_c,b.prc_dec, a.curcd, a.sich,
+          a.prcc_f, a.prcc_c, b.prc_dec, a.curcd, a.sich,
           a.BE, a.mcap_c, b.mcap_dec, mdy(12,31,a.fyear) as fyear_end, 
-       	  coalesce( ((BE>0)*BE)/mcap_c, ((BE>0)*BE)/mcap_dec) as bm_comp 
+       	  coalesce( ((a.BE>0)*a.BE)/a.mcap_c, ((a.BE>0)*a.BE)/b.mcap_dec) as bm_comp 
 		  /*BE<0 are considered as missing, so discarded*/
-from mysas.comp_be a left join mysas.mvalue b
+from mysas.comp_be as a left join mysas.mvalue as b
 on a.gvkey=b.gvkey and a.fyear=year(b.datadate) and a.curcd=b.curcdm
 order by a.gvkey, a.datadate;
 quit;
@@ -135,29 +131,33 @@ quit;
 /* to CRSP stocks only                                               */
 /* Select Compustat's SICH as primary SIC code, if not available     */
 /* then use CRSP's historical SICCD                                  */
+
+/*SIC often missing although d.siccd is never missing*/
+/*This is because the merge condition is on "&a." and "&b.",*/
+/*not on "&d." where d.siccd comes from*/
 proc sql;
 create table mysas.bm_comp_crsp
   as select a.*, b.lpermno as permno,
 			b.lpermco as permco, 
           	((a.be>0)*a.be) / (abs(c.prc*c.shrout)/1000 ) as bm_crsp, 
           	coalesce(a.sich,d.siccd) as sic
-   from mysas.bm_comp a left join &crsp..ccmxpf_linktable b
+   from mysas.bm_comp as a left join &crsp..ccmxpf_linktable as b
 /*CCM is used here for merge*/
    on a.gvkey=b.gvkey and b.linkdt<=a.datadate and b.usedflag=1
    and linkprim in ('P','C')
    and (a.datadate<=b.linkenddt or missing(b.linkenddt)) 
    
   /* market value from CRSP as the Dec end of fiscal year end*/
-  left join &crsp..msf (keep=permno date prc shrout) c 
   /*dsf is more than needed as Dec end is the only relevant*/
-
-/*put(source,format) returns character, converting source into specified format*/
-/*input(source,format) returns numeric*/
+  left join &crsp..msf (keep=permno date prc shrout) as c 
+  /*put(source,format) returns character, converting source into specified format*/
+  /*input(source,format) returns numeric*/
   on b.lpermno=c.permno and put(a.fyear_end, yymmn6.) = put(c.date, yymmn6.)
+
   /*Merge in historical SIC code from CRSP*/
   left join (select distinct permno, siccd, min(namedt) as mindate, 
           max(nameenddt) as maxdate
-          from &crsp..stocknames group by permno, siccd) d
+          from &crsp..stocknames group by permno, siccd) as d
   on b.lpermno=d.permno and d.mindate<=a.fyear_end<=d.maxdate
   order by a.gvkey, a.datadate, sic;
 quit;
@@ -196,50 +196,53 @@ proc sql;
     
   create table mysas.bmcrsp
   as select distinct calyear,ffi&ind._desc, 
-            count(distinct permco) as npermnos
+            count(distinct permno) as npermnos
   from mysas.bm_comp_crsp where not missing(bm_crsp)  and curcd='USD'
   group by calyear, ffi&ind._desc;
 quit;
 
 data mysas.comparebmcov; 
-  merge mysas.bmcomp mysas.bmcrsp;
-    by calyear ffi&ind._desc;
-    diff=(ngvkeys-npermnos)/npermnos;
-    format diff percent7.4;
-    if 1980<=calyear<=2010;
+	merge mysas.bmcomp mysas.bmcrsp;
+	by calyear ffi&ind._desc;
+	diff=(ngvkeys-npermnos)/npermnos;
+	format diff percent7.4;
+	if 1980<=calyear<=2010;
 run;
 
-proc transpose data=mysas.comparebmcov out=mysas.comparebmcov 
- (drop=_name_ label='Comparing Book-to-Market coverage between two methods');
-  by calyear; id ffi&ind._desc;
-  var diff;
+proc transpose data=mysas.comparebmcov out=mysas.comparebmcov
+	(drop=_name_ label='Comparing Book-to-Market coverage between two methods');
+	by calyear; id ffi&ind._desc;
+	var diff;
 run;
-   
-/*Step 7.  B/M ratios for different FF industries over time*/
+
+/*Step 7. B/M ratios for different FF industries over time*/
 /*Step 8. Industry-adjusted B/M ratios at the firm-year level*/
 proc means data=mysas.bm_comp_crsp noprint;
-  class calyear ffi&ind._desc;
-  var bm_comp bm_crsp; where not missing(ffi&ind);
-  output out=mysas.medians median=/autoname;
+	class calyear ffi&ind._desc;
+	var bm_comp bm_crsp;
+	where not missing(ffi&ind);
+	output out=mysas.medians median=/autoname;
 run;
 
-proc sort data=mysas.medians; by calyear ffi&ind._desc;run;
+proc sort data=mysas.medians;
+	by calyear ffi&ind._desc;
+run;
 
 proc transpose data=mysas.medians out=mysas.temp
-  (label="Median Book-to-Market ratios for &ind  FF industries");
-  by calyear; id ffi&ind._desc;
-  where 1970<=calyear<=2010; 
-  var bm_comp_median;
+	(label="Median Book-to-Market ratios for &ind  FF industries");
+	by calyear; id ffi&ind._desc;
+	where 1970<=calyear<=2010; 
+	var bm_comp_median;
 run;
 
 options orientation=landscape device=pdf; 
-symbol1 interpol =join ci =green co =green w = 3 ; 
+symbol1 interpol =join ci =green co =green w=3 ; 
 symbol2 interpol =join ci =blue co =blue w=3; 
 symbol3 interpol =join ci =red co =red w=3; 
 
 proc gplot data =mysas.temp;
-  Title 'Median B/M ratios of sample industries' ;  
-  plot hitec*calyear= 1 hlth*calyear= 2 manuf*calyear=3/ overlay legend ; 
+	Title 'Median B/M ratios of sample industries' ;  
+	plot hitec*calyear= 1 hlth*calyear= 2 manuf*calyear=3/ overlay legend ; 
 run; quit; 
    
 /* Take out the industry component                            */
