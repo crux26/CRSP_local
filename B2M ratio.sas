@@ -1,4 +1,4 @@
-/*Checking done other than mysas.medians file: 2017.01.31*/
+/*Checking done : 2017.FEB.01*/
 
 /*Compustat data: moved from /d_na to /naa */
 
@@ -223,6 +223,9 @@ proc means data=mysas.bm_comp_crsp noprint;
 	output out=mysas.medians median=/autoname;
 run;
 
+/*If one uses class clause in proc MEANS, then it shows overall statistics without classes at the top */
+/*Even though calyear seems to have missing value on the top, that is a statistic w/o any class */
+/*Take that as a time-series average (for calyear. For others, can be cross-sectional average) */
 proc sort data=mysas.medians;
 	by calyear ffi&ind._desc;
 run;
@@ -269,7 +272,7 @@ run;
 proc sql; 
 drop table mysas.comparebmcov, mysas.comp_be, mysas.bmcomp, mysas.bmcrsp, mysas.bm_comp,
            mysas.bm_comp_crsp, mysas.medians, mysas.temp
-      view mysas.comp_extract, mysas.mvalue;
+      view mysas.comp_extract, mysas.comp_extract2, mysas.mvalue;
 quit; 
  
 /* ********************************************************************************* */
