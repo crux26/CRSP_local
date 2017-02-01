@@ -1,5 +1,4 @@
-/*Last modification: 2017.01.31*/
-/*Check Step 7 and 8 to figure out why median.sas lacks calyear variable*/
+/*Checking done other than mysas.medians file: 2017.01.31*/
 
 /*Compustat data: moved from /d_na to /naa */
 
