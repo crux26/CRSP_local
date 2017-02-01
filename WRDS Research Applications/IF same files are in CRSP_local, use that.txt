@@ -1,0 +1,6 @@
+- These files will be checked and can be moved to /CRSP_local.
+
+- If file names in /CRSP_local and /WRDS Research Applications collide,
+
+	then use the one in /CRSP_local.
+
