@@ -1,6 +1,7 @@
 /*Checking Done. (17.01.31)*/
 /*Converting day to month's end not needed for daily data*/
-
+/*%include myMacro('SetDate.sas'); WILL NOT work unless */
+/*-SASINITIALFOLDER "D:\Dropbox\GitHub\CRSP_local" added to sasv9.cfg in ...\nls\en and \ko*/
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
@@ -54,7 +55,7 @@ quit;
 /*%nonMissing(data=mysas.dsf_mrgd2, set=mysas.dsf_mrgd(keep=permno date vol prc ret vwretd ewretd), var=prc ret vwretd ewretd);*/
 /*Above macro not used below as it cannot allow year, month, prc calculation*/
 
-data mysas.dsf_smaller2; 
+data mysas.dsf_smaller; 
 set mysas.dsf_mrgd(keep=permno date vol prc ret vwretd ewretd mktrf smb hml umd rf);
 year = year(date);
 month = month(date);
@@ -70,33 +71,33 @@ vwretd ^=. &
 ewretd ^=. ;
 run;
 
-proc sort data=mysas.dsf_smaller2;
+proc sort data=mysas.dsf_smaller;
 	by permno date;
 run;
 
-data mysas.dsf_smaller3; set mysas.dsf_smaller2;
+data mysas.dsf_smaller2; set mysas.dsf_smaller;
 ObsNum+1;
 by permno year;
 if first.year then ObsNum=1;
 run;
 
 
-proc reg data=mysas.dsf_smaller3
-outest =mysas.beta noprint;
+proc reg data=mysas.dsf_smaller2
+outest =mysas.betad noprint;
 model ret = vwretd;
 by permno year;
 where ObsNum >= 200;
 run;
 
-proc sort data = mysas.beta;
+proc sort data = mysas.betad;
 by year permno;
 run;
 
 %include myMacro('SummRegResult_custom.sas');
-%SummRegResult_custom(data=mysas.beta, out=mysas.BetaPrdcStat, var=intercept vwretd, by=year);
+%SummRegResult_custom(data=mysas.betad, out=mysas.BetaDPrdcStat, var=intercept vwretd, by=year);
 
 %include myMacro('Trans.sas');
-%Trans(data=mysas.BetaPrdcStat, out=mysas.BetaPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
+%Trans(data=mysas.BetaDPrdcStat, out=mysas.BetaDPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
 
 proc sort data=mysas.BetaPrdcStat;
 by coeff year;
