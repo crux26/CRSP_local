@@ -1,4 +1,4 @@
-/*Checking Done. (17.01.31)*/
+/*Selecting common stocks only (SHRCD = 10 or 11) is needed (2017.02.28)*/
 /*%include myMacro('SetDate.sas'); WILL NOT work unless */
 /*-SASINITIALFOLDER "D:\Dropbox\GitHub\CRSP_local" added to sasv9.cfg in ...\nls\en and \ko*/
 
@@ -20,11 +20,22 @@ libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 %SetDate(data=mysas.msia, set=a_index.msia, date=caldt, begdate=&begdate, enddate=&enddate);
 
 proc sql;
+create table mysas.msf_common
+as
+select a.*, b.shrcd
+from
+mysas.msf as a, a_stock.msenames as b
+where a.permno = b.permno &
+(b.shrcd = 10 or b.shrcd = 11) &
+b.namedt <= a.date <= b.nameendt;
+quit;
+
+proc sql;
 	create table mysas.msf_mrgd_whole
 	as
 	select a.*, b.vwretd as vwretd, b.ewretd as ewretd, c.mktrf as mktrf, c.smb as smb, c.hml as hml, c.umd as umd, c.rf as rf
 	from
-		mysas.msf as a
+		mysas.msf_common as a
 	left join
 		mysas.msia as b
 	on a.date = b.date
@@ -97,5 +108,6 @@ run;
 /**/
 proc datasets lib=mysas nolist;
 	delete msf_mrgd_subset msf_mrgd_whole;
-quit;
 run;
+quit;
+

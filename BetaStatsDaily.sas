@@ -1,4 +1,4 @@
-/*Checking Done. (17.01.31)*/
+/*Selecting common stocks only (SHRCD = 10 or 11) is needed (2017.02.28)*/
 /*Converting day to month's end not needed for daily data*/
 /*%include myMacro('SetDate.sas'); WILL NOT work unless */
 /*-SASINITIALFOLDER "D:\Dropbox\GitHub\CRSP_local" added to sasv9.cfg in ...\nls\en and \ko*/
@@ -7,6 +7,7 @@ libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
 libname ff "D:\Dropbox\WRDS\ff\sasdata";
+libname frb "D:\Dropbox\WRDS\frb\sasdata";
 libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
 libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
@@ -26,12 +27,24 @@ libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 %SetDate(data=mysas.dsf, set=a_stock.dsf, date=date, begdate=&begdate, enddate=&enddate);
 %SetDate(data=mysas.dsia, set=a_index.dsia, date=caldt, begdate=&begdate, enddate=&enddate);
 
+/* # of rows: 88786347 -> 35963497 */
+proc sql;
+create table mysas.dsf_common
+as
+select a.*, b.shrcd
+from
+mysas.dsf as a, a_stock.stocknames as b
+where a.permno = b.permno &
+(b.shrcd = 10 or b.shrcd = 11) &
+b.namedt <= a.date <= b.nameenddt;
+quit;
+
 proc sql;
 create table mysas.dsf_mrgd
 as 
 select a.*, b.vwretd as vwretd, b.ewretd as ewretd, c.mktrf as mktrf, c.smb as smb, c.hml as hml, c.umd as umd, c.rf as rf
 from
-	mysas.dsf as a
+	mysas.dsf_common as a
 left join
 	mysas.dsia as b
 on a.date = b.date
@@ -83,7 +96,6 @@ by permno year;
 if first.year then ObsNum=1;
 run;
 
-
 proc reg data=mysas.dsf_smaller2
 outest =mysas.betad noprint;
 model ret = vwretd;
@@ -101,32 +113,33 @@ run;
 %include myMacro('Trans.sas');
 %Trans(data=mysas.BetaDPrdcStat, out=mysas.BetaDPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
 
-proc sort data=mysas.BetaPrdcStat;
+proc sort data=mysas.BetaDPrdcStat;
 by coeff year;
 run;
 
 /*Avg of year is dropped as it is meaningless*/
 %include myMacro('ObsAvg.sas');
-%ObsAvg(data=mysas.BetaPrdcStat, out=mysas.BetaAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
+%ObsAvg(data=mysas.BetaDPrdcStat, out=mysas.BetaDAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
 
-data mysas.BetaPrdcStat;
+data mysas.BetaDPrdcStat;
 retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
-set mysas.BetaPrdcStat;
+set mysas.BetaDPrdcStat;
 run;
 
-data mysas.BetaAvgStat;
+data mysas.BetaDAvgStat;
 retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
-set mysas.BetaAvgStat;
+set mysas.BetaDAvgStat;
 run;
 
 
 /**/
 proc datasets lib=mysas nolist;
-delete dsf_smaller dsf_smaller2 ;
-quit;
+delete dsf_smaller ;
 run;
+quit;
+
 
 proc datasets lib=mysas nolist;
-change dsf_smaller3 = dsf_smaller ;
-quit;
+change dsf_smaller2 = dsf_smaller ;
 run;
+quit;
