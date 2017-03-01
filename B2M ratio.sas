@@ -279,3 +279,26 @@ quit;
 /* *************  Material Copyright Wharton Research Data Services  *************** */
 /* ****************************** All Rights Reserved ****************************** */
 /* ********************************************************************************* */
+
+data mysas.indadjbm2;
+set mysas.indadjbm;
+rename bm_comp = bm_comp_noadj bm_crsp = bm_crsp_noadj;
+run;
+
+%include myMacro('SummResult_B2M.sas');
+%SummResult_B2M(data=mysas.indadjbm2, out=mysas.B2MPrdcStat, var=bm_comp_noadj bm_crsp_noadj bm_comp_indadj bm_crsp_indadj, by=calyear);
+
+%include myMacro('Trans.sas');
+%Trans(data=mysas.B2MPrdcStat, out=mysas.B2MPrdcStat, var=bm_comp_noadj bm_crsp_noadj bm_comp_indadj bm_crsp_indadj, id=_STAT_, by=year );
+
+data mysas.B2MPrdcStat;
+	retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
+	set mysas.B2MPrdcStat;
+	rename coeff = varname;
+run;
+
+proc datasets lib=mysas nolist;
+	delete indadjbm2;
+run;
+quit;
+
