@@ -16,8 +16,7 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 %SetDate(data=mysas.msia, set=a_index.msia, date=caldt, begdate=&begdate, enddate=&enddate);
 
 /*This date manipulation only works for MONTHLY data (not for DAILY data)*/
-data mysas.msf2; set mysas.msf;
-/*where 10000 <= permno <= 14955;*/
+data mysas.msf2; set mysas.msf_common;
 date = intnx('month',date,1)-1;
 year = year(date);
 month = month(date);
@@ -63,5 +62,15 @@ run;
 %include myMacro('Trans.sas');
 %Trans(data=mysas.MktCapPrdcStat, out=mysas.MktCapPrdcStat, var=MktCap, id=_STAT_, by=year );
 
+data mysas.MktCapPrdcStat;
+retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
+set mysas.MktCapPrdcStat;
+run;
+
 %include myMacro('ObsAvg.sas');
 %ObsAvg(data=mysas.MktCapPrdcStat, out=mysas.MktCapAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
+
+data mysas.MktCapAvgStat;
+retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
+set mysas.MktCapAvgStat;
+run;
