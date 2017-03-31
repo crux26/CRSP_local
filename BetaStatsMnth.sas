@@ -57,12 +57,17 @@ data mysas.msf_mrgd_subset;
 	where ret ^= . &
 	vwretd ^=. &
 	ewretd ^=. ;
+	label vwretd = "Value-Weighted Excess Return-incl. dividends";
+	label ewretd = "Equal-Weighted Excess Return-incl. dividends";
+	label ret = "Excess Return";
 run;
 
 proc sort data=mysas.msf_mrgd_subset;
 	by permno date;
 run;
 
+/*WILL RUN REG. ONCE EVERY YEAR W.R.T. EACH FIRM IF (#DATA W/I A YEAR >= 10),*/
+/*SO "FIRST.YEAR" IS THE RIGHT ONE, NOT "FIRST.PERMNO"*/
 data mysas.msf_mrgd_subset;
 	set mysas.msf_mrgd_subset;
 	ObsNum+1;
@@ -70,6 +75,7 @@ data mysas.msf_mrgd_subset;
 	if first.year then ObsNum=1;
 run;
 
+/*Regression not run if (a firm's #data in a given year < 10)*/
 proc reg data=mysas.msf_mrgd_subset
 	outest =mysas.betam noprint;
 	model ret = vwretd;

@@ -90,12 +90,15 @@ proc sort data=mysas.dsf_smaller;
 	by permno date;
 run;
 
+/*WILL RUN REG. ONCE EVERY YEAR W.R.T. EACH FIRM IF (#DATA W/I A YEAR >= 10),*/
+/*SO "FIRST.YEAR" IS THE RIGHT ONE, NOT "FIRST.PERMNO"*/
 data mysas.dsf_smaller2; set mysas.dsf_smaller;
 ObsNum+1;
 by permno year;
 if first.year then ObsNum=1;
 run;
 
+/*Regression not run if (a firm's #data in a given year < 200)*/
 proc reg data=mysas.dsf_smaller2
 outest =mysas.betad noprint;
 model ret = vwretd;
