@@ -1,3 +1,5 @@
+BETASTATS_DAILY
+
 /*Selecting common stocks only (SHRCD = 10 or 11) is needed (2017.02.28)*/
 /*Converting day to month's end not needed for daily data*/
 /*%include myMacro('SetDate.sas'); WILL NOT work unless */
@@ -80,10 +82,12 @@ vwretd = vwretd - rf;
 ewretd = ewretd - rf;
 ret = ret - rf;
 
-where prc ^= . &
-ret ^= . &
-vwretd ^=. &
-ewretd ^=. ;
+  if ret = . then delete;
+  if vwretd =. then delete;
+  if ewretd =. then delete;
+  label vwretd = "Value-Weighted Excess Return-incl. dividends";
+  label ewretd = "Equal-Weighted Excess Return-incl. dividends";
+  label ret = "Excess Return";
 run;
 
 proc sort data=mysas.dsf_smaller;
@@ -98,12 +102,38 @@ by permno year;
 if first.year then ObsNum=1;
 run;
 
+proc sql;
+create table mysas.dsf_smaller3 as
+select *, max(ObsNum) as max_obs
+from mysas.dsf_smaller2
+group by permno, year;
+quit;
+
+proc datasets lib=mysas nolist;
+  delete dsf_smaller2;
+run;
+quit;
+
+proc datasets lib=mysas nolist;
+  change dsf_smaller3 = dsf_smaller2;
+run;
+quit;
+
+proc sort data = mysas.dsf_smaller2;
+by permno date;
+run;
+
+
 /*Regression not run if (a firm's #data in a given year < 200)*/
 proc reg data=mysas.dsf_smaller2
-outest =mysas.betad noprint;
-model ret = vwretd;
+outest =mysas.betad edf noprint;
+model ret = mktrf smb hml umd;
 by permno year;
-where ObsNum >= 200;
+where max_obs >= 200;
+run;
+
+data mysas.betad; set mysas.betad;
+regobs = _p_ + _edf_;
 run;
 
 proc sort data = mysas.betad;
@@ -111,10 +141,10 @@ by year permno;
 run;
 
 %include myMacro('SummRegResult_custom.sas');
-%SummRegResult_custom(data=mysas.betad, out=mysas.BetaDPrdcStat, var=intercept vwretd, by=year);
+%SummRegResult_custom(data=mysas.betad, out=mysas.BetaDPrdcStat, var=intercept mktrf smb hml umd, by=year);
 
 %include myMacro('Trans.sas');
-%Trans(data=mysas.BetaDPrdcStat, out=mysas.BetaDPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
+%Trans(data=mysas.BetaDPrdcStat, out=mysas.BetaDPrdcStat, var=intercept mktrf smb hml umd, id=_STAT_, by=year );
 
 proc sort data=mysas.BetaDPrdcStat;
 by coeff year;

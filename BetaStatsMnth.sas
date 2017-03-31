@@ -54,9 +54,9 @@ data mysas.msf_mrgd_subset;
 	ewretd = ewretd - rf;
 	ret = ret - rf;
 
-	where ret ^= . &
-	vwretd ^=. &
-	ewretd ^=. ;
+	if ret = . then delete;
+	if vwretd =. then delete;
+	if ewretd =. then delete;
 	label vwretd = "Value-Weighted Excess Return-incl. dividends";
 	label ewretd = "Equal-Weighted Excess Return-incl. dividends";
 	label ret = "Excess Return";
@@ -75,12 +75,37 @@ data mysas.msf_mrgd_subset;
 	if first.year then ObsNum=1;
 run;
 
+proc sql;
+create table mysas.msf_mrgd_subset2 as
+select *, max(ObsNum) as max_obs
+from mysas.msf_mrgd_subset
+group by permno, year;
+quit;
+
+proc datasets lib=mysas nolist;
+	delete msf_mrgd_subset;
+run;
+quit;
+
+proc datasets lib=mysas nolist;
+	change msf_mrgd_subset2 = msf_mrgd_subset;
+run;
+quit;
+
+proc sort data = mysas.msf_mrgd_subset;
+by permno date;
+run;
+
 /*Regression not run if (a firm's #data in a given year < 10)*/
 proc reg data=mysas.msf_mrgd_subset
-	outest =mysas.betam noprint;
-	model ret = vwretd;
+	outest =mysas.betam edf noprint;
+	model ret = mktrf smb hml umd;
 	by permno year;
-	where ObsNum >= 10;
+	where max_obs >= 10;
+run;
+
+data mysas.betam; set mysas.betam;
+regobs = _p_ + _edf_;
 run;
 
 proc sort data = mysas.betam;
@@ -88,10 +113,10 @@ proc sort data = mysas.betam;
 run;
 
 %include myMacro('SummRegResult_custom.sas');
-%SummRegResult_custom(data=mysas.betam, out=mysas.BetaMPrdcStat, var=intercept vwretd, by=year);
+%SummRegResult_custom(data=mysas.betam, out=mysas.BetaMPrdcStat, var=intercept mktrf smb hml umd, by=year);
 
 %include myMacro('Trans.sas');
-%Trans(data=mysas.BetaMPrdcStat, out=mysas.BetaMPrdcStat, var=intercept vwretd, id=_STAT_, by=year );
+%Trans(data=mysas.BetaMPrdcStat, out=mysas.BetaMPrdcStat, var=intercept mktrf smb hml umd, id=_STAT_, by=year );
 
 proc sort data=mysas.BetaMPrdcStat;
 	by descending coeff year;
