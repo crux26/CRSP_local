@@ -1,5 +1,6 @@
-%macro RollingBeta(S=, begdate=, enddate=, window=, minwin=, index=);
-
+/*Faster than "RRLOOP.sas", but INADEQUATE for multiple betas.*/
+/*THIS IS HARD-CODED (in some sense), SO BE CAUTIOUS WHEN USING.*/
+%macro RollingBeta(S=, begdate=, enddate=, window=, minwin=, index=vwretd);
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname ff "D:\Dropbox\WRDS\ff\sasdata";
