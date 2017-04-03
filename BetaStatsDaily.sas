@@ -1,6 +1,3 @@
-BETASTATS_DAILY
-
-/*Selecting common stocks only (SHRCD = 10 or 11) is needed (2017.02.28)*/
 /*Converting day to month's end not needed for daily data*/
 /*%include myMacro('SetDate.sas'); WILL NOT work unless */
 /*-SASINITIALFOLDER "D:\Dropbox\GitHub\CRSP_local" added to sasv9.cfg in ...\nls\en and \ko*/
