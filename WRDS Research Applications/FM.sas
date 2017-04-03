@@ -18,8 +18,7 @@
 %MACRO FM (DATA=,OUT=,DATEVAR=,DEPVAR=, INDVARS=,LAG=);
 /*save existing options*/
 %local oldoptions errors;
-%let oldoptions=%sysfunc(getoption(mprint)) %sysfunc(getoption(notes))
-%sysfunc(getoption(source));
+%let oldoptions=%sysfunc(getoption(mprint)) %sysfunc(getoption(notes) %sysfunc(getoption(source));
 %let errors=%sysfunc(getoption(errors));
 options nonotes nomprint nosource errors=0;
 
