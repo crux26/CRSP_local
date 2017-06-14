@@ -1,3 +1,5 @@
+/*Almost same as "RRLOOP.sas". Some lines from there are deleted here. Compare it.*/
+
 /*RUN the code and see permno=93432 for an ERROR*/
 /*THIS IS NOT AN ERROR: THIS NATURALLY ARISES AS REG WINSIZE IS 36 AND MINWIN IS 12*/
 /*IF FIRM EXISTS BETWEEN 12M and 36M, THEN IT WILL YIELD THE SAME REGRESSION RESULTS*/

@@ -1,4 +1,4 @@
-/*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim*/
+/*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim -> SPXData_Export */
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
@@ -85,7 +85,7 @@ data myOption.spxCall_cmpt;
 	informat impl_volatility delta gamma vega theta 12.6;
 	format impl_volatility delta gamma vega theta 12.6;
 	drop secid cp_flag best_bid best_offer ss_flag;
-	where date <='31DEC2012'd;
+	where date <='31DEC2015'd;
 run;
 
 data myOption.spxPut_cmpt;
@@ -98,5 +98,5 @@ data myOption.spxPut_cmpt;
 	informat impl_volatility delta gamma vega theta 12.6;
 	format impl_volatility delta gamma vega theta 12.6;
 	drop secid cp_flag best_bid best_offer ss_flag;
-	where date <= '31DEC2012'd;
+	where date <= '31DEC2015'd;
 run;

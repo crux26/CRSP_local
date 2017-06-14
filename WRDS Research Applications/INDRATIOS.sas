@@ -1,4 +1,7 @@
 ?
+/* Highly unlikely that I will actually use this file. */
+/* Check the code later when needed. */
+
 /* ********************************************************************************* */
 /* ******************** W R D S   R E S E A R C H   M A C R O S ******************** */
 /* ********************************************************************************* */
@@ -32,7 +35,6 @@
    options nonotes nomprint nosource errors=0;
   %let freq=%lowcase(&freq);
   libname home '~';
-   
   /*Impose filter to obtain unique gvkey-datadate records*/
   %let comp_filter=indfmt='INDL' and datafmt='STD' and popsrc='D' and consol='C';
  

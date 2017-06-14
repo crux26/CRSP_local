@@ -8,6 +8,7 @@
 data &output;
 	set &data(keep=&keep);
 	&date = intnx('month', &date, 1)-1;
+/*&date = intnx('month', &date, 0, e) can be used instead*/
 	format &date yymmddn8.;
 	%if &print=1 %then
 		%do;

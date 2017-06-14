@@ -1,4 +1,4 @@
-/*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim*/
+/*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim -> SPXData_Export */
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
@@ -39,6 +39,7 @@ data myOption.spxdata;
 	set myOption.spxdata;
 	if sprtrn =. then delete;
 	if spxset =. then delete;
+	if TB_M3 =. then delete;
 	rate = rate / 100;
 	TB_m3 = TB_m3 / 100;
 run;

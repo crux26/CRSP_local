@@ -1,3 +1,6 @@
+/*Checking not done yet. See and compare RRLOOP.sas and RRLOOP2.sas again*/
+/* if there's no error remaining.*/
+
 /*regression variable name should be changed*/
 
 %macro RRLOOP (year1= 2001, year2= 2005,  nyear= 2, in_ds=temp1, out_ds=work.out_ds);

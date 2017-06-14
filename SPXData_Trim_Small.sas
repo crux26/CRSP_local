@@ -26,7 +26,7 @@ proc sql;
 	as select distinct a.*
 	from myOption.spxcall_cmpt as a,
 	myOption.spxcall_cmpt as b
-	/*Adding the first 2 conditions drastically improves the computation speed*/
+	/*Adding the first 2 conditions belo drastically improves the computation speed*/
 	where a.strike_price = b.strike_price &
 	a.exdate = b.exdate &
 	a.date = intnx('week',b.date,0) +3 ;	/*keep a.date = Wednesday only*/
@@ -46,26 +46,42 @@ run;
 quit;
 
 proc sort data=myOption.spxcall_mnth;
-	by date exdate strike_price;
+	by date exdate descending volume ;
 run;
 
 proc sort data=myOption.spxput_mnth;
-	by date exdate strike_price;
+	by date exdate descending volume;
 run;
 
-data myOption.call1m myOption.call2m myOption.call3m;
-set myOption.spxcall_mnth;
-if datedif <=22 then output myOption.call1m;
-else if 22< datedif <=44 then output myOption.call2m;
-else if 44 < datedif <= 64 then output myOption.call3m;
+data myOption.spxcall_mnth_small; set myOption.spxcall_mnth;
+by date exdate;
+id+1;
+if first.exdate then id=1;
+if id>6 then delete;
+drop id;
+run;
+
+data myOption.spxput_mnth_small; set myOption.spxput_mnth;
+by date exdate;
+id+1;
+if first.exdate then id=1;
+if id>6 then delete;
+drop id;
+run;
+
+data myOption.call1m_small myOption.call2m_small myOption.call3m_small;
+set myOption.spxcall_mnth_small;
+if datedif <=22 then output myOption.call1m_small;
+else if 22< datedif <=44 then output myOption.call2m_small;
+else if 44 < datedif <= 64 then output myOption.call3m_small;
 drop datedif;
 run;
 
-data myOption.put1m myOption.put2m myOption.put3m;
-set myOption.spxput_mnth;
-if datedif <= 22 then output myOption.put1m;
-else if 22< datedif <=44 then output myOption.put2m;
-else if 44< datedif < 64 then output myOption.put3m;
+data myOption.put1m_small myOption.put2m_small myOption.put3m_small;
+set myOption.spxput_mnth_small;
+if datedif <= 22 then output myOption.put1m_small;
+else if 22< datedif <=44 then output myOption.put2m_small;
+else if 44< datedif < 64 then output myOption.put3m_small;
 drop datedif;
 run;
 /**/
@@ -74,13 +90,13 @@ outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.spxcall_mnth
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXCall_Mnth.xlsx"
+proc export data = myOption.spxcall_mnth_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXCall_Mnth_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.spxput_mnth
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXPut_Mnth.xlsx"
+proc export data = myOption.spxput_mnth_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXPut_Mnth_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
@@ -89,37 +105,32 @@ outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.call1m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call1m.xlsx"
+proc export data = myOption.call1m_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call1m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.call2m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call2m.xlsx"
+proc export data = myOption.call2m_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call2m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.call3m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call3m.xlsx"
+proc export data = myOption.call3m_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call3m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.put1m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put1m.xlsx"
+proc export data = myOption.put1m_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put1m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.put2m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put2m.xlsx"
+proc export data = myOption.put2m_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put2m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = myOption.put3m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put3m.xlsx"
-DBMS = xlsx REPLACE;
-run;
-
-proc export data = myOption.spxdata
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXData.xlsx"
+proc export data = myOption.put3m_small
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put3m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;

@@ -1,3 +1,7 @@
+/*	"%let" is a macro statement that you can use in open code	or inside a macro.*/
+/*	Call symptoms can be used only in a DATA step, not in open code.*/
+/*	Mind you, this DATA Step may be inside a macro.*/
+
 data orders;
 input CustomerID $1-3 OrderDate DATE7. Model $ 13-24 Quantity;
 cards;
@@ -21,6 +25,8 @@ data _null_ ; set orders;
 if _N_ = 1 then							 /* "n = 1" wouldn't work as undersbar is not in the front nor in the back */
 	call SYMPUT ("biggest", CustomerID);
 else stop;
+run;
+
 
 proc print data = orders noobs;
 where CustomerID = "&biggest";

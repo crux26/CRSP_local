@@ -12,10 +12,10 @@ libname myVIX "D:\Dropbox\WRDS\CRSP\myVIX";
 
 data vixdata;
 set myvix.vixdata;
-where '01JAN1995'd<=caldt<='31DEC2012'd;
+where '01JAN1995'd<=caldt<='31DEC2015'd;
 run;
 
 proc export data = vixdata
-outfile = "D:\Dropbox\GitHub\VJRP_local\VIX\VIXData\rawData\VIXData.xlsx"
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\VIX\VIXData\rawData\VIXData.xlsx"
 DBMS = xlsx REPLACE;
 run;

@@ -1,3 +1,4 @@
+/*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim -> SPXData_Export */
 libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
 libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
 libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
@@ -10,12 +11,12 @@ libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 data spxdata;
 set myoption.spxdata;
-where '01JAN1995'd<=caldt<='31DEC2012'd;
+where '01JAN1995'd<=caldt<='31DEC2015'd;
 drop rate spxset;
 if tb_m3 =. then delete;
 run;
 
 proc export data = spxdata
-outfile = "D:\Dropbox\GitHub\VJRP_local\Particle\myReturn_Data\rawData\SPXData.xlsx"
+outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXData.xlsx"
 DBMS = xlsx REPLACE;
 run;

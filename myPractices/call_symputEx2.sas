@@ -1,3 +1,7 @@
+/*	"%let" is a macro statement that you can use in open code	or inside a macro.*/
+/*	Call symptoms can be used only in a DATA step, not in open code.*/
+/*	Mind you, this DATA Step may be inside a macro.*/
+
 data prices;
 input code amount;
 datalines;

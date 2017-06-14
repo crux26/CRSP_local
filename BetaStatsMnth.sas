@@ -10,7 +10,8 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 %let begdate = '01JAN1988'd;
-%let enddate = '31DEC2012'd;
+/*%let enddate = '31DEC2012'd;*/
+%let enddate = '31DEC1989'd;
 %let vars = ticker comnam prc ret shrout shrflg;
 %let mkt_index = vwretd;
 
@@ -67,6 +68,8 @@ run;
 
 /*WILL RUN REG. ONCE EVERY YEAR W.R.T. EACH FIRM IF (#DATA W/I A YEAR >= 10),*/
 /*SO "FIRST.YEAR" IS THE RIGHT ONE, NOT "FIRST.PERMNO"*/
+/*Note that this regression is non-overlapping, annual regression,*/
+/*NOT an overlapping monthly regression with past 12 month*/
 data mysas.msf_mrgd_subset;
 	set mysas.msf_mrgd_subset;
 	ObsNum+1;

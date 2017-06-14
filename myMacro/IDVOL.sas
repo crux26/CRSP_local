@@ -1,4 +1,3 @@
-?
 /* ********************************************************************************* */
 /* ******************** W R D S   R E S E A R C H   M A C R O S ******************** */
 /* ********************************************************************************* */
@@ -37,24 +36,28 @@
   %if &freq=d %then %do; %let file=daily;   %let inc=day;  %let dateff=date;%end;
     
   /*Depending on the type of the risk model, create the variable list to be extracted*/
+/*CAPM, FF3F, Carhart4F*/
   %if &model=m   %then %let vars=mktrf;            %else
   %if &model=ff  %then %let vars=mktrf smb hml;    %else
   %if &model=ffm %then %let vars=mktrf smb hml umd;
     
   %put ### CREATING TRADING CALENDAR;
   proc printto log=junk;
-  %Trade_Date_Windows (freq=&freq, size=&window, minsize=&min, outdsn=_caldates);
-  proc printto;run;
+/*Write the log to external file "junk", not to the Log window*/
+  %Trade_Date_Windows(freq=&freq, size=&window, minsize=&min, outdsn=_caldates);
+  proc printto; run;
   %put ### DONE!;
     
   %put ### MERGING IN THE RISK FACTORS;
   proc sql noprint; create table _vol
      as select a.*, b.*, (&retvar-rf) as exret
-     from &inset a left join ff.factors_&file (keep=&dateff rf &vars) b
+     from &inset as a left join ff.factors_&file (keep=&dateff rf &vars) as b
      on a.&datevar=b.&dateff
      order by a.permno, a.&datevar;
      select distinct min(&datevar) format date9.,
                      max(&datevar) format date9. into :mindate,:maxdate
+/*Above is equivalent to "%let mindate = min(&datevar)" &*/
+/*"%let maxdate = max(&datevar)"*/
     from _vol;
   quit;
 %put ### DONE!;
@@ -63,7 +66,7 @@
  /*and the latest dates in the trading calendar              */
   data _caldates; set _caldates;
     n+1;
-    if intnx('month',beg_date,0,'e')=
+    if intnx('month',beg_date,0,'e')= /*'e' seems to stand for 'end'*/
     intnx('month',"&mindate"d,0,'e') then call symput ('start',n);
     if intnx('month',end_date,0,'e')=
     intnx('month',"&maxdate"d,0,'e') then call symput ('finish',n);
@@ -74,10 +77,11 @@
  /*regressions are based on start and end dates in the  */
  /*trading calendar                                     */
   %put ### ESTIMATING IDIOSYNCRATIC VOLATILITY;
-  proc printto log=junk;run;
+  proc printto log=junk; run;
   %do j=&start %to &finish %by &step;
     
    data _null_; set _caldates (sortedby=n where=(n=&j));
+/*sortedby= indicates how the data is currently sorted. */
     call symput ('beg',beg_date);call symput ('end',end_date);
    run;
     
@@ -112,14 +116,14 @@
   run;
     
  /*Pool all estimates of idiosyncratic risk together*/
-  proc append base=_idvol data=_stats force;run;
+  proc append base=_idvol data=_stats force; run;
   %end;
-  proc printto;run;
+  proc printto; run;
     
  /*Merge the incoming dataset with idiosyncratic risk estimates*/
   proc sql; create table &outset
    as select *
-   from &inset a left join _idvol b
+   from &inset as a left join _idvol as b
    on a.permno=b.permno and a.date=b.end_date;
    /* house cleaning*/
    drop table _stats, _vol, _caldates;

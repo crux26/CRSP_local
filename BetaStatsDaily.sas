@@ -12,11 +12,14 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 %let begdate = '01JAN1988'd;
-%let enddate = '31DEC2012'd;
+%let enddate = '31DEC1989'd;
 %let vars = ticker comnam prc vol ret shrout shrflg;
 %let mkt_index = vwretd;
 %let begyear = year(&begdate);
 %let endyear = year(&enddate);
+/*WINDOW, MINWIN needed for rolling regression, which is not run here*/
+%let WINDOW = 252; /*Rolling regression needs a window "cap", as it runs overlapping regressions daily*/
+%let MINWIN = 200;
 
 /*As the codes below takes too much time to run every time I test this whole code,*/
 /*run the codes below with care.*/
@@ -26,7 +29,7 @@ libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 %SetDate(data=mysas.dsf, set=a_stock.dsf, date=date, begdate=&begdate, enddate=&enddate);
 %SetDate(data=mysas.dsia, set=a_index.dsia, date=caldt, begdate=&begdate, enddate=&enddate);
 
-/* # of rows: 88786347 -> 35963497 */
+/* # of rows: 88786347 -> 35963497 for Jan.01.1988 - Dec.31.2012 */
 proc sql;
 create table mysas.dsf_common
 as
@@ -41,7 +44,9 @@ quit;
 proc sql;
 create table mysas.dsf_mrgd
 as 
-select a.*, b.vwretd as vwretd, b.ewretd as ewretd, c.mktrf as mktrf, c.smb as smb, c.hml as hml, c.umd as umd, c.rf as rf
+select a.*, b.vwretd as vwretd, b.ewretd as ewretd,
+	c.mktrf as mktrf, c.smb as smb, c.hml as hml, c.umd as umd, c.rf as rf,
+	(abs(a.ret)>=0) as count 
 from
 	mysas.dsf_common as a
 left join
@@ -49,7 +54,8 @@ left join
 on a.date = b.date
 left join
 	mysas.factors_daily as c
-on a.date = c.date;
+on a.date = c.date
+order by permno, date;
 quit;
 
 /*-------------*/
@@ -69,6 +75,17 @@ quit;
 /*%nonMissing(data=mysas.dsf_mrgd2, set=mysas.dsf_mrgd(keep=permno date vol prc ret vwretd ewretd), var=prc ret vwretd ewretd);*/
 /*Above macro not used below as it cannot allow year, month, prc calculation*/
 
+/*"n" created by proc expand can be used alternatively for rolling regression*/
+/*in lieu of "max_obs"*/
+/*proc printto log=junk; run;*/
+/*proc expand data=mysas.dsf_mrgd out=mysas.dsf_smaller method=none;*/
+/*by permno;*/
+/*id date;*/
+/*convert count=n / transformout = (MOVSUM &WINDOW.);*/
+/*quit;*/
+/*run;*/
+/*proc printto; run;*/
+
 data mysas.dsf_smaller; 
 set mysas.dsf_mrgd(keep=permno date vol prc ret vwretd ewretd mktrf smb hml umd rf);
 year = year(date);
@@ -86,6 +103,9 @@ ret = ret - rf;
   label ewretd = "Equal-Weighted Excess Return-incl. dividends";
   label ret = "Excess Return";
 run;
+/* Instead of deleting the null file, can use the indicator variable count = abs(ret)>=0 */
+/* For the max_obs, count can be aggregated via moving average through proc expand*/
+/* Advantage of this: no "missing date" in observations*/
 
 proc sort data=mysas.dsf_smaller;
 	by permno date;
@@ -93,7 +113,7 @@ run;
 
 /*WILL RUN REG. ONCE EVERY YEAR W.R.T. EACH FIRM IF (#DATA W/I A YEAR >= 10),*/
 /*SO "FIRST.YEAR" IS THE RIGHT ONE, NOT "FIRST.PERMNO"*/
-data mysas.dsf_smaller2; set mysas.dsf_smaller;
+data mysas.dsf_smaller2 /view=mysas.dsf_smaller2; set mysas.dsf_smaller;
 ObsNum+1;
 by permno year;
 if first.year then ObsNum=1;
@@ -106,7 +126,8 @@ from mysas.dsf_smaller2
 group by permno, year;
 quit;
 
-proc datasets lib=mysas nolist;
+/*should specify memtype=view to delete view table*/
+proc datasets lib=mysas memtype=view nolist;
   delete dsf_smaller2;
 run;
 quit;
@@ -122,6 +143,7 @@ run;
 
 
 /*Regression not run if (a firm's #data in a given year < 200)*/
+/*For the rolling regression, */
 proc reg data=mysas.dsf_smaller2
 outest =mysas.betad edf noprint;
 model ret = mktrf smb hml umd;
@@ -163,7 +185,7 @@ run;
 
 
 /**/
-proc datasets lib=mysas nolist;
+proc datasets lib=mysas memtype=view nolist;
 delete dsf_smaller ;
 run;
 quit;

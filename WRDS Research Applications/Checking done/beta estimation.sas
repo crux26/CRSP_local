@@ -1,3 +1,8 @@
+/* Checking done. (2017.Jun.09)*/
+/* Not so easy to extend it for multiple betas; will have to run regressions many times to get betas. */
+/* To be specific, cannot define "X", being a matrix of multiple variables, properly in SAS, which is needed */
+/* to calculate BETA = (X'X)^-1X'Y */
+
 /* ********************************************************************************* */
 /* ************** W R D S   R E S E A R C H   A P P L I C A T I O N S ************** */
 /* ********************************************************************************* */
@@ -24,10 +29,16 @@ libname ff "/wrds/ff/sasdata";
 /* %let S=d; %let WINDOW=250; %let MINWIN=60; */
  
 /* START. Computing Betas from &sf Using &WINDOW Estimation Window */
-%let sf       = crsp.&s.sf ; /* CRSP Stock Dataset: Daily vs. Monthly */
-%let si       = crsp.&s.si ; /* CRSP Index Dataset: Daily vs. Monthly */
+*%let sf       = crsp.&s.sf ; /* CRSP Stock Dataset: Daily vs. Monthly */
+*%let si       = crsp.&s.si ; /* CRSP Index Dataset: Daily vs. Monthly */
+%let sf       = mysas.&s.sf ; /* CRSP Stock Dataset: Daily vs. Monthly */
+%let si       = mysas.&s.sia ; /* CRSP Index Dataset: Daily vs. Monthly */
+
  
 /* Read CRSP Stock Dataset */
+/*VIEW is faster than w/o it. However, if double-click the table,*/
+/*only the portion of the whole table shows up. To see the rest of it,*/
+/*one has to drag it down to the bottom repeatedly.*/
 data _crsp1 /view=_crsp1;
 set &sf. ;
 where "&START."D<=date<="&END."D;
@@ -35,8 +46,10 @@ keep permno date ret;
 run;
  
 /* Add Index Return Data */
+/*used "create view" instead of "create table" in order to boost up*/
+/*the computation speed*/
 proc sql;
-create table _crsp2
+create view _crsp2
 as select a.*, b.&index,
   b.&index*(abs(a.ret)>=0) as X, a.ret*b.&index as XY,
   (abs(a.ret*b.&index)>=0) as count
@@ -47,6 +60,8 @@ quit;
  
 /* Compute Components for Covariances and Variances for Market Model Regression */
 proc printto log = junk; run;
+/*under proc expand, too many WARNINGS will show up if*/
+/*log is not printed to "junk"*/
 proc expand data=_crsp2 out=_crsp3 method=none;
 by permno;
 id date;
