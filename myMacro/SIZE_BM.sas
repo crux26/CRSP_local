@@ -75,7 +75,11 @@ Merge historical codes with CRSP Monthly Stock File
 Restriction on Share Code: common shares only            
 ****************************************************************/
 
-%let filtr = (shrcd in (10,11));         
+%let filtr = (shrcd in (10,11));
+/*SHRCD, first digit=1: Ordinary common shares */
+/*SHRCD, second digit=0: Securities which have not been further defined. */
+/*SHRCD, second digit=1: Securities which need not be further defined. */
+ 
 * Selected variables from the CRSP Monthly Stock File;     
 %let fvars =  prc ret shrout;                                
 *  Selected variables from the CRSP Monthly Event File;
