@@ -1,3 +1,5 @@
+/*CALL SYMPUTX(): automatically removes leading and trailing blanks, not like CALL SYMPUT(). */
+
 /*	"%let" is a macro statement that you can use in open code	or inside a macro.*/
 /*	Call symptoms can be used only in a DATA step, not in open code.*/
 /*	Mind you, this DATA Step may be inside a macro.*/
@@ -32,6 +34,7 @@ run;
 /*Below generates a series of macro variable names by combining*/
 /*the character string "S" and values contained in "DEPT" variable in dataset "stats"*/
 
+/*symput("A", B): variable A assigned a value B*/
 data _null_;
 set stats;
 if _n_=1 then call symput('s_tot',s_sal);
