@@ -1,4 +1,4 @@
-/*Checking Done! (2017.Jun.09)*/
+/*Checking Done! (2017.06.09)*/
 /* Only the result is stored in "mysas" library, as "mysas.dgtw_returns". */
 /* Not macro, in fact*/
 
@@ -38,6 +38,10 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
 /* Create a CRSP Subsample with Monthly Stock and Event Variables */
 /* Restriction on the type of shares (common stocks only: shrcd in (10,11)) */
 %let sfilter = (shrcd in (10,11));
+/*SHRCD, first digit=1: Ordinary common shares */
+/*SHRCD, second digit=0: Securities which have not been further defined. */
+/*SHRCD, second digit=1: Securities which need not be further defined. */
+
 /* Selected variables from the CRSP monthly data file (crsp.msf file) */
 %let msfvars = permco prc ret vol shrout cfacpr cfacshr;
 %let msevars = ncusip exchcd shrcd siccd ;
@@ -285,8 +289,6 @@ drop dec20 dec40 dec60 dec80;
 label group = "Size Portfolio Group";
 /* Aboves are size quintiles */
 run;
- 
-/*START AGAIN FROM HERE*/
 
 /* Adjusted B2M from the calendar year preceding the formation date */
 proc sql;
