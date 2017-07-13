@@ -11,8 +11,9 @@
 %MACRO NWORDS (INVAR);
 %local N W;
  
-/* %let invar = %sysfunc(compbl(&invar)); */
- 
+ %let invar = %sysfunc(compbl(&invar)); 
+/*compbl(): Removes multiple blanks from a character string. */
+
 %let N = 0;
 %let W = 1;
  
