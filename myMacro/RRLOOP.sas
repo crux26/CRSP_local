@@ -1,11 +1,7 @@
-/*RUN the code and see permno=93432 for an ERROR*/
-/*THIS IS NOT AN ERROR: THIS NATURALLY ARISES AS REG WINSIZE IS 36 AND MINWIN IS 12*/
-/*IF FIRM EXISTS BETWEEN 12M and 36M, THEN IT WILL YIELD THE SAME REGRESSION RESULTS*/
-/*--> NO! SHOULDN'T THE WINDOW START W.R.T. EACH FIRM? IF SO, THEN THIS IS AN UNDESIRED RESULT*/
-/*HOWEVER, IF THE WINDOW HAS TO MOVE AT ONCE, THEN IT IS UNAVOIDABLE*/
+/* Checking done! (2017.07.06) */
 
-/*"date2" is "Today"*/
-%macro rrloop( data= , out_ds= , model_equation= , id= , date=date ,
+/*"date2(=min(&idate2,&sdate2))" is "Today"*/
+%macro rrloop(data= , out_ds= , model_equation= , id= , date=date ,
              start_date= , end_date= , freq=month, s=1, n=12, regprint=noprint, minwin= );
  
 * Start with empty output data sets;
@@ -35,16 +31,18 @@ run;
     from &data where not missing(&date);
     select min_date into : min_date from _dx1;
     select max_date into : max_date from _dx1;
+/* Assign a local variable min_date whose value is _dx1.min_date. */
   quit;
 %end;
  
  * SDATE1 and SDATE2 put in sas date number form (1/1/1960=0);
+/* sdate1 = &start_date --> missing(sdate1)=1 if missing(start_date)=1. */
 %if &sdate1 = %str() %then %do;
-     %let sdate1= &min_date;
+  %let sdate1= &min_date;
 %end;
 
 %if &sdate2 = %str() %then %do;
-     %let sdate2= &max_date;
+  %let sdate2= &max_date;
 %end;
 
  
@@ -55,36 +53,35 @@ run;
 * Preliminary date setting for each iteration/loop;
 * First end date (idate2) is n periods after the start date;
 
-/*%let idate2= %sysfunc(intnx(&freq,&sdate1,(&n-1),end));*/
-/*%let idate1= %sysfunc(intnx(&freq,&idate2,-&n+1,begin));*/
-
+/*Defines idate1 first, w.r.t. &sdate1. Then defines idate2 w.r.t. &idate1. */
+/* By doing so, "idate2" is "today". */
 %let idate1= %sysfunc(intnx(&freq,&sdate1,-&n+1,begin));
 %let idate2= %sysfunc(intnx(&freq,&idate1,(&n-1),end));
 
 /*%put First loop: &idate1 -- &idate2; */
-/*%put   Loop through: &sdate2; */
+/*%put Loop through: &sdate2; */
 
-/*%put _user_; */
+/*Before below code runs, sdate1='ddmmmyyy'd, not "numeric date".*/
+/* Hence, "(&idate2 > &sdate2)" returns an error. */
+/* However, if the above comparison is made outside the macro, it runs without an error. */
+/* Don't see why, but at below, changes date format from "character date" to "numeric date". */
+%let sdate1 = %sysfunc(intnx(day, &sdate1, 0, same));
+%let sdate2 = %sysfunc(intnx(day, &sdate2, 0, same));
 
 %if (&idate2 > &sdate2) %then %do;  
 * Dates are not acceptable-- show problem, do not run loop;
-  %put PROBLEM-- end date for loop exceeds range  : ( &idate2 > &sdate2 );
+  %put PROBLEM -- end date for loop exceeds range  : ( &idate2 > &sdate2 );
 %end;
 
 %else %do;  *Dates are accepted-- run loops;
-/*  %do %while(&idate2 <= &sdate2);  */
+  %put RRLOOP running... ;
+  proc printto log=junk; run;
   %do %while(&idate2 <= &sdate2);  
  
-  *Define loop start date (idate1) based on inherited end date (idate2);
-    
-/*    %let idate1= %sysfunc(intnx(&freq,&idate2,-&n+1,begin));*/
-/*    %let idate1= %sysfunc(max(&sdate1,&idate1));*/
-
-	
-/*    %let idate2= %sysfunc(min(&sdate2,&idate2));*/
+/* Define loop end date (idate2) based on inherited start date (idate1). */
+  %let idate2= %sysfunc(intnx(&freq, &idate1, (&n-1), end));
  
-/*    %put Loop:  &jj -- &date1c &date2c;*/
-    %put  Loop: -- &idate1 &idate2;
+/*  %put  Loop: -- &idate1 &idate2;*/
    
   proc datasets nolist;
     delete _outest_ds;
@@ -92,39 +89,40 @@ run;
    
   ***** analysis code here -- for each loop;
   * noprint to just make output set;
-  %let noprint= noprint;
-  %if %upcase(&noprint) = yes | %upcase(&noprint) = print %then %let noprint= ;
+/*  %let noprint= noprint;*/
+/*  %if %upcase(&noprint) = yes | %upcase(&noprint) = print %then %let noprint= ;*/
   proc reg data=&data 
-           outest=_outest_ds  edf 
-           &noprint;
-	where &date between &idate1 and &idate2;
+    outest=_outest_ds edf 
+	noprint;
+/*    &noprint;*/
+    where &date between &idate1 and &idate2;
     model &model_equation;
     &by_id;
   run; 
+/* Above reg. runs w/o errors even if (&idate1<&sdate1) or (&idate2>&sdate2), */
+/* as reg. uses all available points only and returns no error. */
    
   * Add loop date range variables to output set;
   data _outest_ds;
     set _outest_ds;
     regobs= _p_ + _edf_;  * number of observations in regression;
     date1= %sysfunc(max(&sdate1,&idate1));
-/*    date2= %sysfunc(min(&idate2,&sdate2));*/
-	date2 = &idate2;
+/*	date1 = &idate1; */
+    date2= %sysfunc(min(&idate2,&sdate2));
     format date1 date2 date9.;
 /*BOTH BELOW DO NOT WORK: calculated variable cannot be implemented w/i that data step*/
-/*	%if  regobs < &minwin %then delete;*/
-/*	%if regobs >= &minwin %then;*/
+/*  %if  regobs < &minwin %then delete;*/
+/*  %if regobs >= &minwin %then;*/
   run;
    
   * Append results;
   proc datasets nolist;
     append base=_all_ds data=_outest_ds;
-	where regobs >= &minwin;
+    where regobs >= &minwin;
   run; 
    
   * Set next loop end date;
-/*  %let idate2= %sysfunc( intnx(&freq,&idate2,&s,end) );*/
-  %let idate1= %sysfunc( intnx(&freq,&idate1,&s,end) );
-  %let idate2= %sysfunc(intnx(&freq,&idate1,(&n-1),end));
+  %let idate1= %sysfunc( intnx(&freq, &idate1, &s, begin) );
   %end; *end of loop;
    
    
@@ -132,11 +130,17 @@ run;
   data &out_ds;
     set _all_ds;
   run;
+  
   proc sort data=&out_ds;
     by &id date2;
   run; 
    
 %end; * end for date check pass section;  
- 
- 
+proc datasets libname=work nolist;
+delete _all_ds _outest_ds;
+quit;
+
+proc printto; run;
+%put RRLOOP done. ;
+
 %mend rrloop;
