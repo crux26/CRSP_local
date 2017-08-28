@@ -5,6 +5,7 @@
 /* ********************************************************************************* */
 /* ************** W R D S   R E S E A R C H   A P P L I C A T I O N S ************** */
 /* ********************************************************************************* */
+/* Program	: DGTW.sas																		*/
 /* Summary   : Construct Daniel Grinblatt Titman and Wermers(1997) Benchmarks        */
 /* Date      : January, 2011                                                         */
 /* Author    : Rabih Moussawi and Gjergji Cici                                       */
