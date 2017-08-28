@@ -1,1 +1,8 @@
+# to ignore junk.log files created by SAS
 *.log
+
+
+# SAS-related temporary files
+*.sas7bdat
+*.sas7bcat
+*.sas7bitm
