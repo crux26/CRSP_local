@@ -1,4 +1,6 @@
 /*Checking done! (2017.06.07)*/
+/* Maybe I discarded the original code implementing Daniel, Titman (2006) */
+/* and converted it into the way of Fama, French (1992,1993). */
 
 /*Compustat data: moved from /d_na to /naa */
 
@@ -94,6 +96,8 @@ data mysas.comp_extract/view=mysas.comp_extract; set &comp..funda;
 /*	SEQ TXDB ITCB BVPS PSTKRV PSTKL PSTK;*/
 run;
 
+/* Removed TXDITC (deferred taxes), PRBA (FASB106 adjustment) of Daniel, Titman (2006). */
+/* So just defining a new dataset with the same contents. */
 data mysas.comp_be;
 set mysas.comp_extract;
 run;
