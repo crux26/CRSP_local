@@ -159,8 +159,6 @@ if last.year;
 drop linkprim;
 run;
 
-/*START AGAIN FROM HERE*/
-
 /* Industry-Adjust the B/M Ratios using F&F(1997) 48-Industries */
 data comp4;
 	set comp3;
