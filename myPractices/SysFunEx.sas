@@ -1,5 +1,5 @@
 /*%SYSFUNC */
-/*Execute SAS functions or user-written functions*/
+/*Execute SAS functions or user-written functions. */
 /*The function cannot be a MACRO function*/
 
 /*However, user-written "macro" functions can be used.*/
