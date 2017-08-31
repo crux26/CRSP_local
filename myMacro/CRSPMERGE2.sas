@@ -1,8 +1,13 @@
-/
+/* WARNING: Do NOT try using this instead of CRSPMERGE(). */
+/* Initializing variables of &SEVARS of CRSPMERGE() covers all (at least most of) the relevant variables.*/
+
 /* WARNING: be award of %eventvars. There must be a reason of being hard-coded, */
 /* so do not mess it up with %LET eventvars=&sevars. */
 /* Otherwise, it will screw up the result, and this can be checked by the following: */
 /* PROC SORT data= out= NODUPKEY; where 1 &filter; (try also NODUPLICATES in place of NODUPKEY). */
+/* --> Those EVENTVARS will change "in line", while other SEVARS such as DCLRDT, TRTSENDT, MONTH changes */
+/* far much frequently. */
+
 
 /* Only difference from CRSPMERGE(): try to retain as many variables as possible here, by NOT using DROP, KEEP, ... */
 
@@ -38,7 +43,7 @@
 /*                          (default: no filters)                                      */
 /*             - OUTSET: Output Dataset Name (default: names crsp_m or crsp_d)        */
 /* ********************************************************************************* */
-%MACRO CRSPMERGE2 (s=m,START=01JAN2000,END=30JUN2001,SFVARS=prc ret shrout, SEVARS=ticker ncusip exchcd shrcd siccd,FILTERS=,OUTSET=crsp_&s.);
+%MACRO CRSPMERGE2 (s=m,START=01JAN2000,END=30JUN2001,SFVARS=prc ret shrout, SEVARS=ticker cusip ncusip permco permno exchcd shrcd siccd,FILTERS=,OUTSET=crsp_&s.);
 
 /* Check Series: Daily or Monthly and define datasets - Default is Monthly  */
 %if &s=D %then %let s=d; %else %if &s ne d %then %let s=m;
@@ -125,7 +130,8 @@ proc sql;
 /*So within each permno, select min(namedt) from &senames satisfying WHERE condition*/
 
 /* Merge stock and event data */
-%let eventvars = ticker comnam ncusip shrout siccd exchcd shrcls shrcd shrflg trtscd nmsind mmcnt nsdinx;
+%let eventvars = ticker comnam cusip ncusip permco permno shrout siccd exchcd shrcls shrcd shrflg trtscd nmsind mmcnt nsdinx;
+/*%let eventvars = ticker comnam ncusip shrout siccd exchcd shrcls shrcd shrflg trtscd nmsind mmcnt nsdinx;*/
 /* Above from CRSPMERGE(). */
 /*%let eventvars = &sevars;*/
 /* As the below DATA step checks whether &var, a word in a word vector &sevars, belongs to */
@@ -134,7 +140,8 @@ proc sql;
 /* START AGAIN FROM HERE (2017.08.30). */
 
 /*--------------------------------------------------------------------------------*/
-data &outset. (keep=permno date &sfvars &sevars);
+/*data &outset. (keep=permno date &sfvars &sevars);*/
+data &outset. ;
 merge __sedata (in=eventdata) __sfdata (in=stockdata);
 /*in= Data Set Option creates a Boolean variable INTERNALLY that indicates whether the data set*/
 /*contributed data to the current observation*/
@@ -145,13 +152,15 @@ by permno date; retain &sevars_l;
 /*by an INPUT or assignment statement to missing before each iteration of the DATA step. */
 /*Use a RETAIN statement to specify initial values for individual variables, a list of variables, or members of an array. */
 %do i = 1 %to &nsevars;
-  %let var   = %scan(&sevars,&i,%str( )); /*Reads in each variable through iteration delimited by space*/
+  %let var   = %scan(&sevars,&i,%str( )); /*Reads in each variable through iteration delimited by space. */
   %let var_l = %scan(&sevars_l,&i,%str( ));
 /*INDEX(source,excerpt): searches SOURCE, from left to right, for the first occurrence of the string specified in EXCERPT,*/
 /*and returns the position in SOURCE of the string's first character*/
   %if %sysfunc(index(&eventvars,&var))>0 %then
    %do; 
      if eventdata or first.permno then &var_l = &var. ;
+	 /* Above means "structural change", so no meaningful "lag" for this case. */
+	/* Thus, redefine the "lag" to be the present value. */
 	 else if not eventdata then &var = &var_l. ;
    %end;
 %end;
@@ -168,14 +177,24 @@ run;
 /*--------------------------------------------------------------------------------*/
 
 
-%ABORT;
-
 /* Some companies have many distribution on the same date (e.g. a stock and cash dist)  */
 /* Records will identical except for different DISTCD and DISTAMT */
 proc sort data=&outset. noduplicates;
 where 1 &filters;
     by permno date;
 run;
+
+/* Don't see why, but there're observations having DATE and PERMNO only. */
+/* I checked the DATE is wrong, which a prior month of a firm's NAMEDT. */
+/* So, the DATA step below will remove it. */
+/* This is probably because BY variables are DATE and PERMNO. */
+data &outset.; set &outset.;
+if missing(permco) then delete;
+run;
+/* PERMCO is always non-missing in MSEALL, so checking with PERMCO for empty observation seems fine. */
+/* NOTE that PERMNO cannot be used for this, as this is a BY variable. */
+/* --> This doesn't work as intended as it does for CRSPMERGE(). */
+
 
 /* House Cleaning */
 /*proc sql; */
