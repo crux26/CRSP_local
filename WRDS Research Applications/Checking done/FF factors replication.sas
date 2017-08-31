@@ -88,9 +88,10 @@ run;
    
 /*%include '/wrds/crsp/samples/crspmerge.sas';*/
 %include myMacro('crspmerge.sas');   
-%crspmerge(s=m,start=01jan1959,end=30dec2016,
-sfvars=&msfvars,sevars=&msevars,filters=exchcd in (1,2,3), outset=crsp_m);
-/* EXCHCD=1,2,3: NYSE, NYSE MKT, NASDAQ, respectively.  */
+%crspmerge(s=m,start=01jan1959,end=31dec2016,
+/*sfvars=&msfvars,sevars=&msevars,filters=exchcd in (1,2,3), outset=crsp_m);*/
+sfvars=&msfvars,sevars=&msevars,filters=exchcd in (1,2,3,4), outset=crsp_m);
+/* EXCHCD=1,2,3,4: NYSE, NYSE MKT (AMEX), NASDAQ, Arca, respectively.  */
 
 /* CRSP_M is sorted by date and permno and has historical returns     */
 /* as well as historical share codes and exchange codes               */
@@ -126,7 +127,7 @@ quit;
 /* aggregated ME will be assigned to the Permno with the largest ME.    */
 /*--> That is, if 1 permco(aa) has 2 permno (111,222) where ME111=10, ME222=20. */
 /* Then assign 30 to "222", so ME222=30. */
-data crspm2a (drop = Meq); set crspm2;
+data crspm2a (drop = MEq); set crspm2;
   by date permco Meq;
   retain ME;
 /* If RETAIN statement isn't used, then aggregating ME over PERMCO may not work. */
@@ -401,12 +402,12 @@ set vwret3;
 run;
    
 /* Clean the house*/
-proc sql; 
-   drop table ccm1, ccm1a,ccm2a,ccm2_june,
-              ccm3_june, ccm4, comp,
-              crspm2, crspm2a, crspm3, crsp_m,
-              decme, june, nyse_breaks;
-quit;
+/*proc sql; */
+/*   drop table ccm1, ccm1a,ccm2a,ccm2_june,*/
+/*              ccm3_june, ccm4, comp,*/
+/*              crspm2, crspm2a, crspm3, crsp_m,*/
+/*              decme, june, nyse_breaks;*/
+/*quit;*/
  
 /* ********************************************************************************* */
 /* *************  Material Copyright Wharton Research Data Services  *************** */
