@@ -1,6 +1,11 @@
 /*Checking done! (2017.06.07)*/
-/* Maybe I discarded the original code implementing Daniel, Titman (2006) */
-/* and converted it into the way of Fama, French (1992,1993). */
+
+/* Original program in fact implemented Daniel, Titman (2006)'s way. */
+/* However, I altered BE calculation to that of Fama, French (1992, 1993). */
+/* As the calculation of BE is the only difference, the rest of the codes below are the same. */
+
+/* This yields a lot less nonmissing data than "B2M ratio - DT.sas". */
+/* Too many are considered as missing using "B2M ratio - FF.sas". */
 
 /*Compustat data: moved from /d_na to /naa */
 
