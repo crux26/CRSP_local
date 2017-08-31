@@ -1,3 +1,7 @@
+/* Reason of merging with mseall, msenames: when one needs SEVARS, such as TICKER, NCUSIP, EXCHCD, SHRCD, SICCD, ... */
+/* Note that EXCHCD is also AVAILABLE in msf, in the name of HEXCD. */
+/* HEXCD in (1,2,3,4): NYSE, NYSE MKT(AMEX), NASDAQ, Arca, respectively. */
+
 /*Merges a_stock.msf, a_stock.mseall, a_stock.msenames */
 /*Basically not so differnt from msf - variables relevant to asset pricing is mostly from msf*/
 /*Variables from msf: &SFVARS - PRC RET SHROUT */
@@ -20,7 +24,7 @@
 /*             - OUTSET: Output Dataset Name (default: names crsp_m or crsp_d)        */
 /* ********************************************************************************* */
 
-%MACRO CRSPMERGE (s=m,START=01JAN2000,END=30JUN2001,SFVARS=prc ret shrout, SEVARS=ticker ncusip exchcd shrcd siccd,FILTERS=,OUTSET=crsp_&s.);
+%MACRO CRSPMERGE (s=m,START=01JAN2000,END=30JUN2001,SFVARS=prc ret shrout, SEVARS=ticker cusip ncusip permco permno exchcd shrcd siccd dlret,FILTERS=,OUTSET=crsp_&s.);
 
 /* Check Series: Daily or Monthly and define datasets - Default is Monthly  */
 %if &s=D %then %let s=d; %else %if &s ne d %then %let s=m;
@@ -28,6 +32,17 @@
 %let sf       = mysas.&s.sf ;
 %let se       = mysas.&s.seall ;
 %let senames  = mysas.&s.senames ;
+/* <WRDS overview of CRSP U.S. stock database> */
+/* mse = msenames+msedist+msedelist+mseshares+msenasdin, the 5 types of events. */
+
+/* Mseall: event type is not available. Items associated with a one-time event, such as dividend cash amount (divamt), */
+/* will not be carried on to the next observation. If there are multiple one-time events within one month, */
+/* multiple observations will appear for the same date. */
+/* (Note that because event type is available in mse file, it writes each event on multiple observations, sharing the same date.) */
+
+/* Stocknames: a cross b/w dseall and dsenames. It has only the most important identification variables, */
+/* eliminating much of the noise of dseall.*/
+
 
 %put ; 
 %put #### START. Merging CRSP Stock File (&s.sf) and Event File (&s.se) ;
@@ -95,8 +110,10 @@ proc sql;
    quit;
 /*So within each permno, select min(namedt) from &senames satisfying WHERE condition*/
 
+
 /* Merge stock and event data */
-%let eventvars = ticker comnam ncusip shrout siccd exchcd shrcls shrcd shrflg trtscd nmsind mmcnt nsdinx;
+/*%let eventvars = ticker comnam ncusip shrout siccd exchcd shrcls shrcd shrflg trtscd nmsind mmcnt nsdinx;*/
+%let eventvars = ticker comnam cusip ncusip permco permno shrout siccd exchcd shrcls shrcd shrflg dlret trtscd nmsind mmcnt nsdinx;
 
 data &outset. (keep=permno date &sfvars &sevars);
 merge __sedata (in=eventdata) __sfdata (in=stockdata);
@@ -122,6 +139,11 @@ by permno date; retain &sevars_l;
 if eventdata and not stockdata then delete; 
 /*Don't see why, but above IF statement doesn't work w/o DO loops above*/
 drop &sevars_l ;
+/* Above DROP statement seems ineffective, because of KEEP statement data &outset.(keep=permno date &sfvars &sevars). */
+/* Hence, &sevars_l seems to be dropped already. */
+/* Whether running above DROP statement or not doesn't make any difference in &outset due to KEEP statement. */
+/* But the reason why running the above code complains only in CRSPMERGE2() and NOT here is a mystery. */
+/* --> This is because &var, a word in a word vector &sevars, is a subset of &eventvars, which is not the case of CRSPMERGE2(). */
 run;
 
 /* Some companies have many distribution on the same date (e.g. a stock and cash dist)  */
@@ -131,13 +153,25 @@ where 1 &filters;
     by permno date;
 run;
 
+/* Don't see why, but there're observations having DATE and PERMNO only. */
+/* I checked the DATE is wrong, which a prior month of a firm's NAMEDT. */
+/* So, the DATA step below will remove it. */
+/* This is probably because BY variables are DATE and PERMNO. */
+data &outset.; set &outset.;
+if missing(permco) then delete;
+run;
+/* PERMCO is always non-missing in MSEALL, so checking with PERMCO for empty observation seems fine. */
+/* NOTE that PERMNO cannot be used for this, as this is a BY variable. */
+
+
 /* House Cleaning */
 proc sql; 
 drop table __sedata, __sfdata; 
 quit; 
 
 options notes;
-%put #### DONE . Dataset &outset. Created! ;	%put ;
+%put #### DONE . Dataset &outset. Created! ;
+%put ;
 
 %MEND CRSPMERGE;
 
