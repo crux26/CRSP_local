@@ -128,7 +128,7 @@ quit;
 /*--> That is, if 1 permco(aa) has 2 permno (111,222) where ME111=10, ME222=20. */
 /* Then assign 30 to "222", so ME222=30. */
 data crspm2a (drop = MEq); set crspm2;
-  by date permco Meq;
+  by date permco MEq;
   retain ME;
 /* If RETAIN statement isn't used, then aggregating ME over PERMCO may not work. */
   if first.permco and last.permco then do;
@@ -137,11 +137,11 @@ data crspm2a (drop = MEq); set crspm2;
   output; /* most common case where a firm has a unique permno*/
   end;
   else do ;
-    if  first.permco then ME=meq;
+    if  first.permco then ME=MEq;
 /* If one PERMCO has multiple PERMNO, then PERMCO having the same value will have multiple observations */
 /* on each date, each for different PERMNOs. */
 /*meq: calculated w.r.t. PERMNO in above table crspm2. */
-    else ME=sum(meq,ME);
+    else ME=sum(MEq,ME);
 /*If PERMCO has multiple observations (note that value of PERMCO remains same over multiple observations),  */
 /* then aggregate it ("cumulative sum" over different PERMNO, paired with one single PERMCO). */
     if last.permco then output;
@@ -205,6 +205,10 @@ proc sql;
 /*b.date + 6 = a.date. b.date: "last December", a.bdate: "this June"*/
 quit;
    
+/*--------------------------------Above: CRSP only------------------------------------------*/
+/*------------------------------------------------------------------------------------------------*/
+/*-----------------------------------Below: CCM----------------------------------------------*/
+
 /***************   Part 3: Merging CRSP and Compustat ***********/
 /* Add Permno to Compustat sample */
 proc sql;
@@ -308,13 +312,15 @@ data june ; set ccm3_june;
  * and BE (t-1) >0 and more than two years in Compustat ("count>=2");
 	 if 0 <= ME <= sizemedn     then sizeport = 'S';
 	 else if ME > sizemedn      then sizeport = 'B';
-	 else sizeport=.;
-/*can use '' instead of . for missing. */
-/*SIZEPORT: non missing ONLY IF "beme>0 (and me>0 and count>=2)"*/
+/*	 else sizeport=.;*/
+	 else sizeport=' '; /*SIZEPORT is string --> "=. " is NOT a missing string, but missing numeric. Thus, should use ' ' instead. */
+/* SIZEPORT: non missing ONLY IF "beme>0 (and me>0 and count>=2)" */
+/* which is an error by using "=. " to denote a missing string. */
 	 if 0 < beme <= beme30 then           btmport = 'L';
 	 else if beme30 < beme <= beme70 then btmport = 'M' ;
 	 else if beme  > beme70 then          btmport = 'H';
-	 else btmport=.;
+/*	 else btmport=.;*/
+	 else btmport=' ';
   end;
   else positivebeme=0;
 /*BE: many of it missing --> BEME missing as well. */
@@ -392,7 +398,7 @@ set vwret3;
  N_B =  n_bl + n_bm + n_bh;
  N_S =  n_sl + n_sm + n_sh ;
  N_SMB = N_S + N_B;
- Total1= N_SMB;
+ Total= N_SMB;
  label N_H   = 'N_firms High'
        N_L   = 'N_firms Low'
        N_HML = 'N_firms HML'
