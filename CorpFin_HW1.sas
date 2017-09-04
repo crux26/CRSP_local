@@ -22,25 +22,25 @@ SFVARS=prc ret shrout hexcd, SEVARS=ticker cusip ncusip permco permno exchcd shr
 proc sort data=CorpFin.crsp_d_raw out=CorpFin.crsp_d; by permno date; run;
 proc sort data=CorpFin.crsp_m_raw out=CorpFin.crsp_m; by permno date; run;
 
-/* Stock selection */
+/* Pre-processing: Stock selection */
 %StockSelect(freq=m, datain=CorpFin.crsp_m_raw, dataout=crsp_m_NYSE, picknum=3, filter_exchcd=1);
 %StockSelect(freq=m, datain=CorpFin.crsp_m_raw, dataout=crsp_m_NASDAQ, picknum=3, filter_exchcd=3);
 %StockSelect(freq=d, datain=CorpFin.crsp_d_raw, dataout=crsp_d_NYSE, picknum=3, filter_exchcd=1);
 %StockSelect(freq=d, datain=CorpFin.crsp_d_raw, dataout=crsp_d_NASDAQ, picknum=3, filter_exchcd=3);
 
-/* kurt, skew, normality test stat */
+/* Q1.A. kurt, skew, normality test stat */
 %kurt_skew(datain=crsp_m_NYSE, dataout=crsp_m_NYSE_stat, by=permno, var=ret);
 %kurt_skew(datain=crsp_m_NASDAQ, dataout=crsp_m_NASDAQ_stat, by=permno, var=ret);
 %kurt_skew(datain=crsp_d_NYSE, dataout=crsp_d_NYSE_stat, by=permno, var=ret);
 %kurt_skew(datain=crsp_d_NASDAQ, dataout=crsp_d_NASDAQ_stat, by=permno, var=ret);
 
-/* Portfolio return calculation */
+/* Q1.B. Portfolio return calculation */
 %weighted_ret(datain=crsp_m_NYSE, dataout=crsp_m_NYSE_PF_ret); 
 %weighted_ret(datain=crsp_m_NASDAQ, dataout=crsp_m_NASDAQ_PF_ret);
 %weighted_ret(datain=crsp_d_NYSE, dataout=crsp_d_NYSE_PF_ret); 
 %weighted_ret(datain=crsp_d_NASDAQ, dataout=crsp_d_NASDAQ_PF_ret);
 
-/*-------------------------------------------------------------------------------------------*/
+/* Q1.B. kurt, skew, normality test stat */
 proc univariate data=crsp_m_NYSE_PF_ret noprint normaltest 
 outtable=crsp_m_NYSE_PF_ret_stat(keep=_VAR_ _kurt_ _skew_ _normal_ _probn_) ;
 var ewret vwret;
@@ -60,6 +60,18 @@ proc univariate data=crsp_d_NASDAQ_PF_ret noprint normaltest
 outtable=crsp_d_NASDAQ_PF_ret_stat(keep=_VAR_ _kurt_ _skew_ _normal_ _probn_) ;
 var ewret vwret;
 run;
-/*-------------------------------------------------------------------------------------------*/
-/*sia: NYSE*/
-/*sio: NASDAQ*/
+
+/* Q1.C. done */
+%MergeIndex(freq=m, datain=crsp_m_NYSE_PF_ret, dataout=crsp_m_NYSE_ret, exchcd=1);
+%MergeIndex(freq=m, datain=crsp_m_NASDAQ_PF_ret, dataout=crsp_m_NASDAQ_ret, exchcd=3);
+
+%MergeIndex(freq=d, datain=crsp_d_NYSE_PF_ret, dataout=crsp_d_NYSE_ret, exchcd=1);
+%MergeIndex(freq=m, datain=crsp_d_NASDAQ_PF_ret, dataout=crsp_d_NASDAQ_ret, exchcd=3);
+
+/* Q1.D. Autocorrelation (up to 6 lag) */
+%autocorr(datain=crsp_m_NYSE_ret, dataout=crsp_m_NYSE_AR);
+%autocorr(datain=crsp_m_NASDAQ_ret, dataout=crsp_m_NASDAQ_AR);
+%autocorr(datain=crsp_m_NYSE_ret, dataout=crsp_m_NYSE_AR);
+%autocorr(datain=crsp_m_NASDAQ_ret, dataout=crsp_m_NASDAQ_AR);
+
+/*----------------Q1 all done. -------------------*/
