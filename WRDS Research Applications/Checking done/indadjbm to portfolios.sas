@@ -1,4 +1,4 @@
-/* Checking Done! (2017.08.31) */
+/* Something wrong with "ff_nfirms" table. */
 
 /* INPUT: crsp_m, indadjbm */
 /* This code basically follows <FF factors replication.sas>. */
@@ -33,7 +33,7 @@ end;
 else do;
 	if first.permco then ME=MEq;
 	else ME=sum(MEq, ME);
-	if last.permco then output;
+	if last.permco then output crsp_m2a;
 end;
 run;
 
@@ -71,11 +71,16 @@ proc sql;
 	from crsp_m3 (where=(month(date)=6)) as a, decme as b
   	where a.permno=b.permno and
   	intck('month',b.date,a.date)=6;
+/*	intck('interval', start_date, end_date) */
 quit;
 
 /*--------------------------Setting NYSE breakpoints----------------------------------*/
 
-proc univariate data=indadjbm_dt noprint;
+data indadjbm_dt_june; set indadjbm_dt;
+if month(datadate) ^=6 then delete;
+run;
+
+proc univariate data=indadjbm_dt_june noprint;
   where exchcd=1 and bm_crsp>0 and shrcd in (10,11) and me>0 and count>=2;
 /*COUNT: Specific firm's number of observations in COMPUSTAT.COUNT=1: first.gvkey (sorted by gvkey datadate). */
 /*--> why discard COUNT=1 or first.gvkey=1? (O) */
@@ -96,6 +101,8 @@ left join
 nyse_breaks as b
 on a.datadate = b.datadate;
 quit;
+
+/**/
 
 data tmp_1; set tmp_0;
 if bm_crsp>0 and me>0 and count>=2 then do;
@@ -120,7 +127,7 @@ data june; set tmp_1;
 if month(datadate) ^=6 then delete;
 run;
 
-proc sort data=june; by permno date; run;
+proc sort data=june; by permno datadate; run;
 
 /**/
 
