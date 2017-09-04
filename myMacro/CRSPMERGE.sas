@@ -43,7 +43,6 @@
 /* Stocknames: a cross b/w dseall and dsenames. It has only the most important identification variables, */
 /* eliminating much of the noise of dseall.*/
 
-
 %put ; 
 %put #### START. Merging CRSP Stock File (&s.sf) and Event File (&s.se) ;
 
