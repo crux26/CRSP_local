@@ -54,7 +54,7 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
 %include myMacro('FFI48.sas');
 %include myMacro('FFI49.sas');
 
-%let bdate=01jan1962; %let edate=31dec2016; 
+%let bdate=01jan1962; %let edate=31jul2017; 
 %let comp=mysas;  
 %let crsp=mysas; 
 /* Standard Compustat Filter*/
@@ -108,6 +108,7 @@ BE0 = SHE-PS;
 if year("&bdate"d) - 1<=calyear<=year("&edate"d) + 1; 
 keep gvkey calyear fyr fyear BE0 indfmt consol mcap_c sich  
 datafmt popsrc datadate TXDITC prcc_f prcc_c curcd; 
+label mcap_c="prcc_c*csho. Market Value of Equity at Dec end of fiscal year t";	
 run; 
 /*gvkey: global company key. Unique identifer that represents each company throughout Xpressfeed. */
 /* All company data records are identified by a GVKEY. Except in rare circumstances, GVKEY do not change. */
@@ -142,6 +143,7 @@ and "&bdate"d<=datadate<="&edate"d;
 mcap_dec=prccm*cshoq; 
 rename prccm=prc_dec; 
 keep gvkey datadate prccm curcdm mcap_dec; 
+label mcap_dec="prccm*cshoq. Alternative to mcap_c. Use it only when missing(mcap_c)";
 run; 
 /*primiss: Primary/Joiner Flag. {P(rimary), J(oiner} */
 /* P: The primary issue identifies the issue with the highest average trading volume over a period of time. */
@@ -336,7 +338,7 @@ run;
 /* INDADJBM contains the firm-level raw and industry-adjusted */
 /* Book-to-Market ratios calculated using COMPUSTAT Only      */
 /* as well as CRSP-COMPUSTAT Merged Product                   */
-data indadjbm; merge bm_comp_crsp medians; 
+data indadjbm_DT; merge bm_comp_crsp medians; 
 by calyear ffi&ind._desc; 
 bm_comp_indadj = bm_comp - bm_comp_median; 
 bm_crsp_indadj = bm_crsp - bm_crsp_median; 
@@ -355,15 +357,24 @@ sic='Historical SIC code';
 if not missing(gvkey); 
 run; 
 
+proc sort data=indadjbm_DT; by gvkey datadate; run;
+
+data indadjbm_DT; set indadjbm_DT;
+retain count;
+if first.gvkey then count=1;
+else count=count+1;
+label count="# of observations in COMPUSTAT";
+by gvkey datadate;
+run;
+
 /* Clean the house*/
-proc sql;  
-drop table comparebmcov, comp_be, bmcomp, bmcrsp, bm_comp, 
-bm_comp_crsp, medians, temp 
-view comp_extract, mvalue; 
-quit;  
+/*proc sql;  */
+/*drop table comparebmcov, comp_be, bmcomp, bmcrsp, bm_comp, */
+/*bm_comp_crsp, medians, temp */
+/*view comp_extract, mvalue; */
+/*quit;  */
 
 /* ********************************************************************************* */
 /* *************  Material Copyright Wharton Research Data Services  *************** */
 /* ****************************** All Rights Reserved ****************************** */
 /* ********************************************************************************* */
-
