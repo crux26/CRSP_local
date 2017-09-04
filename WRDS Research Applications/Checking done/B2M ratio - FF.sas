@@ -65,7 +65,7 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
    
 /* Calculating Market-to-Book using Compustat only                             */
 /* Advantage: captures many firms that are in Compustat, but not in CRSP       */
-%let begdate=01jan1962; %let enddate=31dec2015;
+%let begdate=01jan1962; %let enddate=31dec2016;
 /*%let begdate=01jan2008; %let enddate=31dec2015;*/
 %let comp=mysas; 
 %let crsp=mysas;
@@ -81,8 +81,9 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
 /* the Dec end price as of Dec 1989. However, if the fiscal year end falls b/w */
 /* june and dec 1990, then prcc_c will be the price as of Dec 1990             */
  
-data mysas.comp_extract/view=mysas.comp_extract; set &comp..funda;
-	where (at>0 or not missing(sale)) and &comp_filter and fic='USA';
+data comp_extract/view=comp_extract; set &comp..funda;
+/*	where (at>0 or not missing(sale)) and &comp_filter and fic='USA';*/
+	where (at>0 or not missing(sale)) and &comp_filter and fic in ('USA', 'CAN');
 	calyear=year(datadate);
 	mcap_c = prcc_c * csho; /*Market Value of Equity at Dec end of fiscal year t  */
 
@@ -99,24 +100,26 @@ data mysas.comp_extract/view=mysas.comp_extract; set &comp..funda;
    	keep gvkey datadate calyear fyr fyear mcap_c prcc_c prcc_f 
 			BE curcd sich;
 /*	SEQ TXDB ITCB BVPS PSTKRV PSTKL PSTK;*/
+label mcap_c="prcc_c*csho. Market Value of Equity at Dec end of fiscal year t";	
 run;
 
 /* Removed TXDITC (deferred taxes), PRBA (FASB106 adjustment) of Daniel, Titman (2006). */
 /* So just defining a new dataset with the same contents. */
-data mysas.comp_be;
-set mysas.comp_extract;
+data comp_be;
+set comp_extract;
 run;
 
 /* Step 2: calculate the market value as of Dec end                 */
 /* Curcdm is the currency in which the monthly prices are available */
 /* Primiss='P' is the primary issue with the highest average trading*/
 /* volume over a period of time                                     */
-data mysas.mvalue/view=mysas.mvalue; set &comp..secm;
+data mvalue/view=mvalue; set &comp..secm;
   where month(datadate)=12 and primiss='P' and fic='USA'
   and "&begdate"d<=datadate<="&enddate"d;
   mcap_dec=prccm*cshoq;
   rename prccm=prc_dec;
   keep gvkey datadate prccm curcdm mcap_dec;
+  label mcap_dec="prccm*cshoq. Alternative to mcap_c. Use it only when missing(mcap_c)";
 run;
    
 /* Step 3a. Create Book to Market (BM) ratios using Compustat only   */
@@ -127,13 +130,13 @@ run;
 /* MCAP: market equity as of Dec of fiscal year t if available      */
 /* BM_COMP contains the B/M ratios for the entire Compustat Universe */
 
-proc sql; create table mysas.bm_comp
+proc sql; create table bm_comp
 as select a.gvkey, a.datadate format date9., a.calyear, a.fyear, 
           a.prcc_f, a.prcc_c,b.prc_dec, a.curcd, a.sich,
           a.BE, a.mcap_c, b.mcap_dec, mdy(12,31,a.fyear) as fyear_end, 
        	  coalesce( ((BE>0)*BE)/mcap_c, ((BE>0)*BE)/mcap_dec) as bm_comp 
 		  /*BE<0 are considered as missing, so discarded*/
-from mysas.comp_be a left join mysas.mvalue b
+from comp_be a left join mvalue b
 on a.gvkey=b.gvkey and a.fyear=year(b.datadate) and a.curcd=b.curcdm
 order by a.gvkey, a.datadate;
 quit;
@@ -143,12 +146,12 @@ quit;
 /* to CRSP stocks only                                               */
 /* Select Compustat's SICH as primary SIC code, if not available     */
 /* then use CRSP's historical SICCD                                  */
-proc sql; create table mysas.bm_comp_crsp
+proc sql; create table bm_comp_crsp
   as select a.*, b.lpermno as permno,
 			b.lpermco as permco, 
           	((a.be>0)*a.be) / (abs(c.prc*c.shrout)/1000 ) as bm_crsp, 
           	coalesce(a.sich,d.siccd) as sic
-   from mysas.bm_comp a left join &crsp..ccmxpf_linktable b
+   from bm_comp a left join &crsp..ccmxpf_linktable b
 /*CCM is used here for merge*/
    on a.gvkey=b.gvkey and b.linkdt<=a.datadate and b.usedflag=1
    and linkprim in ('P','C')
@@ -172,45 +175,48 @@ quit;
 /* Step 4. Invoke FF industry classification                  */
 /* BM_COMP_CRSP contains B/M ratios based on "Compustat only" */
 /* and CRSP-Compustat Merged database                         */
-data mysas.bm_comp_crsp; set mysas.bm_comp_crsp;
+data bm_comp_crsp; set bm_comp_crsp;
  by gvkey datadate;
  if last.datadate; /*selects the record with non-zero SIC code*/
   %ffi&ind(sic);
 run;
    
 /*trimming extreme values of Book-to-Market within industries*/
-proc sort data=mysas.bm_comp_crsp;
+proc sort data=bm_comp_crsp;
   by calyear ffi&ind._desc; 
 run;
 
-proc rank data=mysas.bm_comp_crsp out=mysas.bm_comp_crsp groups=100;
+proc rank data=bm_comp_crsp out=bm_comp_crsp groups=100;
   by calyear ffi&ind._desc; var bm_comp bm_crsp;
-  ranks rbm_comp rbm_crsp;
+  ranks rbm_comp rbm_crsp; /* ranks 2 variables independently. Default: ASCENDING. */
+ /* Hence, rank=1 has the smallest, rank=99 has the biggest value. */
+ /* DESCENDING: rank=1 has the biggest value. */
+ /* rank missing if var missing */
 run; 
 
-data mysas.bm_comp_crsp; set mysas.bm_comp_crsp;
-  if rbm_comp=99 then bm_comp=.;
+data bm_comp_crsp; set bm_comp_crsp;
+  if rbm_comp=99 then bm_comp=.; /* Discard only the biggest <-- why not rbm_comp=1 as well? */
   if rbm_crsp=99 then bm_crsp=.;
 run;
    
 /* Step 6. Number of distinct companies with non-missing B/M
 /* based on Compustat only and based on Crsp-Compustat products*/
 proc sql; 
-  create table mysas.bmcomp
+  create table bmcomp
   as select distinct calyear,ffi&ind._desc, 
             count(distinct gvkey) as ngvkeys
-  from mysas.bm_comp_crsp where not missing(bm_comp)  and curcd='USD'
+  from bm_comp_crsp where not missing(bm_comp)  and curcd='USD'
   group by calyear, ffi&ind._desc;
     
   create table mysas.bmcrsp
   as select distinct calyear,ffi&ind._desc, 
             count(distinct permco) as npermnos
-  from mysas.bm_comp_crsp where not missing(bm_crsp)  and curcd='USD'
+  from bm_comp_crsp where not missing(bm_crsp)  and curcd='USD'
   group by calyear, ffi&ind._desc;
 quit;
 
-data mysas.comparebmcov; 
-  merge mysas.bmcomp mysas.bmcrsp;
+data comparebmcov; 
+  merge bmcomp mysas.bmcrsp;
     by calyear ffi&ind._desc;
     diff=(ngvkeys-npermnos)/npermnos;
     format diff percent7.4;
@@ -218,7 +224,7 @@ data mysas.comparebmcov;
 /*Above condition is not obvious, so commented*/
 run;
 
-proc transpose data=mysas.comparebmcov out=mysas.comparebmcov 
+proc transpose data=comparebmcov out=comparebmcov 
  (drop=_name_ label='Comparing Book-to-Market coverage between two methods');
   by calyear; id ffi&ind._desc;
   var diff;
@@ -226,15 +232,15 @@ run;
    
 /*Step 7.  B/M ratios for different FF industries over time*/
 /*Step 8. Industry-adjusted B/M ratios at the firm-year level*/
-proc means data=mysas.bm_comp_crsp noprint;
+proc means data=bm_comp_crsp noprint;
   class calyear ffi&ind._desc;
   var bm_comp bm_crsp; where not missing(ffi&ind);
-  output out=mysas.medians median=/autoname;
+  output out=medians median=/autoname;
 run;
 
-proc sort data=mysas.medians; by calyear ffi&ind._desc; run;
+proc sort data=medians; by calyear ffi&ind._desc; run;
 
-proc transpose data=mysas.medians out=mysas.temp
+proc transpose data=medians out=temp
   (label="Median Book-to-Market ratios for &ind  FF industries");
   by calyear; id ffi&ind._desc;
 /*  where 1970<=calyear<=2010; */
@@ -242,29 +248,32 @@ proc transpose data=mysas.medians out=mysas.temp
   var bm_comp_median;
 run;
 
+/*-----------------------------------------------Plotting example--------------------------------------------------*/
+/*options orientation=landscape device=pdf; */
+/*symbol1 interpol =join ci =green co =green w = 3 ; */
+/*symbol2 interpol =join ci =blue co =blue w=3; */
+/*symbol3 interpol =join ci =red co =red w=3; */
+/**/
+/*proc gplot data =mysas.temp;*/
+/*  Title 'Median B/M ratios of sample industries' ;  */
+/*  plot hitec*calyear= 1 hlth*calyear= 2 manuf*calyear=3/ overlay legend ; */
+/*run; quit; */
+/*---------------------------------------------------------------------------------------------------------------------*/
 
-options orientation=landscape device=pdf; 
-symbol1 interpol =join ci =green co =green w = 3 ; 
-symbol2 interpol =join ci =blue co =blue w=3; 
-symbol3 interpol =join ci =red co =red w=3; 
-
-proc gplot data =mysas.temp;
-  Title 'Median B/M ratios of sample industries' ;  
-  plot hitec*calyear= 1 hlth*calyear= 2 manuf*calyear=3/ overlay legend ; 
-run; quit; 
-   
+ 
 /* Take out the industry component                            */
 /* INDADJBM contains the firm-level raw and industry-adjusted */
 /* Book-to-Market ratios calculated using Compustat Only      */
 /* as well as CRSP-Compustat Merged Product                   */
-data mysas.indadjbm; merge mysas.bm_comp_crsp mysas.medians;
+data indadjbm_FF; merge bm_comp_crsp medians;
   by calyear ffi&ind._desc;
   bm_comp_indadj = bm_comp - bm_comp_median;
   bm_crsp_indadj = bm_crsp - bm_crsp_median;
   if missing(ffi&ind._desc) then do;
   bm_comp_indadj=. ; bm_crsp_indadj=. ; end;
-  keep gvkey datadate permco permno fyear calyear bm_comp bm_crsp; 
-  keep bm_comp_indadj bm_crsp_indadj ffi&ind._desc sic;
+/*  keep gvkey datadate permco permno fyear calyear bm_comp bm_crsp; */
+/*  keep bm_comp_indadj bm_crsp_indadj ffi&ind._desc sic;*/
+/* Discard all columns not specified by KEEP. */
   label calyear='Calendar year of the fiscal period end'
       bm_comp='B/M ratio (Compustat Only)'
       bm_crsp='B/M ratio (CRSP-Compustat Merged)'
@@ -273,12 +282,22 @@ data mysas.indadjbm; merge mysas.bm_comp_crsp mysas.medians;
       sic='Historical SIC code';
       if not missing(gvkey);
 run;
-   
+
+proc sort data=indadjbm_FF; by gvkey datadate; run;
+
+data indadjbm_FF; set indadjbm_FF;
+retain count;
+if first.gvkey then count=1;
+else count=count+1;
+label count="# of observations in COMPUSTAT";
+by gvkey datadate;
+run;
+ 
 /* Clean the house*/
 proc sql; 
-drop table mysas.comparebmcov, mysas.comp_be, mysas.bmcomp, mysas.bmcrsp, mysas.bm_comp,
-           mysas.bm_comp_crsp, mysas.medians, mysas.temp
-      view mysas.comp_extract, mysas.mvalue;
+drop table comparebmcov, comp_be, bmcomp, bmcrsp, bm_comp,
+           bm_comp_crsp, medians, temp
+      view comp_extract, mvalue;
 quit; 
  
 /* ********************************************************************************* */
