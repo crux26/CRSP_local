@@ -1,7 +1,15 @@
-/* Currently working on B2M ratio - FF. Compare it with Daniel, Titman's way - "B2M ratio - original code" */
-/* START again from "B2M ratio - DT".*/
+/* Currently working on <indadjbm to portfolios>. */
+/* # of result firms from <B2M ratio - DT> are too small compared to <B2M ratio - FF>. */
 
-/*COMPUSTAT: NO MORE /d_na, but /naa*/
+/* WARNING: in PROC SORT, NODUPKEY and NODUPLICATES are DIFFERENT. */
+/* NODUPLICATES: delete duplicated observations (records identical to each other). */
+/* NODUPKEY: delete observations with duplicate BY values (the sort BY variables). */
+
+
+/* After that, re-check FF factors replication.sas, and find a way to form portfolio returns */
+/* using indadjbm (industry-adjusted B2M). (2017.08.28) */
+
+/*COMPUSTAT: NO MORE /d_na, but /naa (use /nam instead)*/
 
 /*a_ccm.ccmxpf_linktable: almost equivalent to a_ccm.ccmxpf_lnkhist */
 
@@ -25,23 +33,11 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
 libname BEM "D:\Dropbox\GitHub\CRSP_local\Bali, Engle, Murray - replications";
+libname ff_repl "D:\Dropbox\WRDS\CRSP\ff_repl";
+
 
 /* To automatically point to the macros in this library within your SAS program */
 options sasautos=('D:\Dropbox\GitHub\CRSP_local\myMacro\', SASAUTOS) MAUTOSOURCE;
 
-proc sql; create table aaa
-  as select a.*
-   from bm_comp as a 
 
-   left join &crsp..ccmxpf_linktable as b 
-   on a.gvkey=b.gvkey and b.usedflag=1 
-
-and b.linkdt<=a.datadate and (a.datadate<=b.linkenddt or missing(b.linkenddt))
-   and linkprim in ('P','C')  
-
-/*  left join (select distinct permno, siccd, min(namedt) as mindate,  */
-/*          max(nameenddt) as maxdate */
-/*          from &crsp..stocknames group by permno, siccd) as d */
-/*  on b.lpermno=d.permno and d.mindate<=a.fyear_end<=d.maxdate*/
-  order by a.gvkey, a.datadate; 
-quit; 
+%CRSPMERGE (s=m,START=01JAN2007,END=31DEC2016, OUTSET=crsp_&s.);
