@@ -10,7 +10,7 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 %let head = optionm.Opprcd;
-
+/*For year=2016, only up to April exists.*/
 data myOption.SPXCall;
 set  &head.1996 &head.1997 &head.1998 &head.1999 &head.2000 &head.2001 &head.2002 &head.2003 &head.2004 &head.2005 &head.2006
  &head.2007 &head.2008 &head.2009 &head.2010 &head.2011 &head.2012 &head.2013 &head.2014 &head.2015;

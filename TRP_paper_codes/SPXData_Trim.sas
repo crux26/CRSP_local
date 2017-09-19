@@ -70,56 +70,56 @@ drop datedif;
 run;
 /**/
 proc export data = myOption.exdateseries
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\exDateSeries.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.spxcall_mnth
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXCall_Mnth.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXCall_Mnth.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.spxput_mnth
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXPut_Mnth.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXPut_Mnth.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.exdateseries
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\exDateSeries.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.call1m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call1m.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\call1m.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.call2m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call2m.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\call2m.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.call3m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call3m.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\call3m.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.put1m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put1m.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\put1m.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.put2m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put2m.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\put2m.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.put3m
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put3m.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\put3m.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.spxdata
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXData.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawData\SPXData.xlsx"
 DBMS = xlsx REPLACE;
 run;

@@ -10,9 +10,9 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 proc sql;
-	create table myOption.exdateseries
-	as select distinct(exdate) as exdate
-	from myOption.spxcall_cmpt;
+    create table myOption.exdateseries
+    as select distinct(exdate) as exdate
+    from myOption.spxcall_cmpt;
 run;
 quit;
 
@@ -22,35 +22,35 @@ quit;
 /*run;*/
 
 proc sql;
-	create table myOption.spxcall_mnth
-	as select distinct a.*
-	from myOption.spxcall_cmpt as a,
-	myOption.spxcall_cmpt as b
-	/*Adding the first 2 conditions belo drastically improves the computation speed*/
-	where a.strike_price = b.strike_price &
-	a.exdate = b.exdate &
-	a.date = intnx('week',b.date,0) +3 ;	/*keep a.date = Wednesday only*/
+    create table myOption.spxcall_mnth
+    as select distinct a.*
+    from myOption.spxcall_cmpt as a,
+    myOption.spxcall_cmpt as b
+    /*Adding the first 2 conditions belo drastically improves the computation speed*/
+    where a.strike_price = b.strike_price &
+    a.exdate = b.exdate &
+    a.date = intnx('week',b.date,0) +3 ;    /*keep a.date = Wednesday only*/
 run;
 quit;
 
 proc sql;
-	create table myOption.spxput_mnth
-	as select distinct a.*
-	from myOption.spxput_cmpt as a,
-	myOption.spxput_cmpt as b
-	/*Adding the first 2 conditions drastically improves the computation speed*/
-	where a.strike_price = b.strike_price &
-	a.exdate = b.exdate &
-	a.date = intnx('week',a.date,0) +3; /*keep Wednesday only*/
+    create table myOption.spxput_mnth
+    as select distinct a.*
+    from myOption.spxput_cmpt as a,
+    myOption.spxput_cmpt as b
+    /*Adding the first 2 conditions drastically improves the computation speed*/
+    where a.strike_price = b.strike_price &
+    a.exdate = b.exdate &
+    a.date = intnx('week',a.date,0) +3; /*keep Wednesday only*/
 run;
 quit;
 
 proc sort data=myOption.spxcall_mnth;
-	by date exdate descending volume ;
+    by date exdate descending volume ;
 run;
 
 proc sort data=myOption.spxput_mnth;
-	by date exdate descending volume;
+    by date exdate descending volume;
 run;
 
 data myOption.spxcall_mnth_small; set myOption.spxcall_mnth;
@@ -86,51 +86,51 @@ drop datedif;
 run;
 /**/
 proc export data = myOption.exdateseries
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\exDateSeries.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.spxcall_mnth_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXCall_Mnth_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXCall_Mnth_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.spxput_mnth_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXPut_Mnth_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXPut_Mnth_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.exdateseries
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\exDateSeries.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.call1m_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call1m_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\call1m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.call2m_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call2m_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\call2m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.call3m_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\call3m_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\call3m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.put1m_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put1m_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\put1m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.put2m_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put2m_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\put2m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.put3m_small
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\put3m_small.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\put3m_small.xlsx"
 DBMS = xlsx REPLACE;
 run;

@@ -17,6 +17,6 @@ if tb_m3 =. then delete;
 run;
 
 proc export data = spxdata
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXData.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXData.xlsx"
 DBMS = xlsx REPLACE;
 run;
