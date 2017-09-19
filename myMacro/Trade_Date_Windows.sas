@@ -113,8 +113,10 @@
       retain window_size &size  _end_date;
  
       ** In this merge statement, the second dataset allows looking ahead to end-of-window **;
-      merge mysas.&freq.sia (keep=date rename=(date=beg_date))
-            mysas.&freq.sia (keep=date firstobs=%eval(1+&size) rename=(date=end_date));
+/*      merge mysas.&freq.sia (keep=date rename=(date=beg_date))*/
+/*            mysas.&freq.sia (keep=date firstobs=%eval(1+&size) rename=(date=end_date));*/
+	  merge mysas.&freq.sia (keep=caldt rename=(caldt=beg_date))
+            mysas.&freq.sia (keep=caldt firstobs=%eval(1+&size) rename=(caldt=end_date));
 			/*Above begins to read data from firstobs*/
  
       if end_date ^= . then window_size=&size;
