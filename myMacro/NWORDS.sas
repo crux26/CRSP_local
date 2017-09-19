@@ -1,3 +1,6 @@
+/*This is faster than %QSCAN(). (Whitlock, A Personal View of SAS-L as a Teaching Tool). */
+/*The very codes are different, though.*/
+
 /* ********************************************************************************* */
 /* ******************** W R D S   R E S E A R C H   M A C R O S ******************** */
 /* ********************************************************************************* */
