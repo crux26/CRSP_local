@@ -9,4 +9,3 @@
       call execute('%symdel ' ||trim(left(name)) ||' ; ');
   run;
 %mend;
-%delvars
