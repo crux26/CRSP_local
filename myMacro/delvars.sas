@@ -14,4 +14,3 @@
 
 %mend delvars;
 
-%delvars
