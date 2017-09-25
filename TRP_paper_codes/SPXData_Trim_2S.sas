@@ -80,6 +80,9 @@ having calculated min_datedif=datedif
 order by date, datedif, strike_price;
 quit;
 
+data myoption.spxcall_mnth_1st; set spxcall_mnth_1st; run;
+data myoption.spxput_mnth_1st; set spxput_mnth_1st; run;
+
 proc export data = myOption.exdateseries
 outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
