@@ -9,7 +9,7 @@ libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
 libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
-/*WARNING: tb_m3<0 happens occasionally.*/
+/*WARNING: tb_m3<0 happens occasionally. Even missing for some dates.*/
 data myOption.FRB_tb3m;
     set frb.rates_daily;
     keep date tb_m3;
@@ -20,6 +20,9 @@ proc import datafile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXSET.xlsx"
 dbms = xlsx REPLACE out = myOption.SPXSET ;
 range='Sheet1$A2:B7504'; /*Range includes column names.*/
 run;
+
+/*PX_LAST: convert from character to numeric*/
+data myOption.SPXSET; set myOption.SPXSET; px_last_=input(px_last, 8.); drop px_last; rename px_last_=px_last; run;
 
 proc sql;
     create table myOption.spxData
