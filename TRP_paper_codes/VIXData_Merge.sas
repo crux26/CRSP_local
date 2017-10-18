@@ -12,33 +12,33 @@ libname VIX "D:\Dropbox\WRDS\cboe\sasdata";
 libname myVIX "D:\Dropbox\WRDS\CRSP\myVIX";
 
 data myVIX.FRB_tb3m;
-	set frb.rates_daily;
-	keep date tb_m3;
+    set frb.rates_daily;
+    keep date tb_m3;
 run;
 
 proc sql;
-	create table myVIX.vixData
-	as select a.caldt, a.spindx, a.sprtrn, b.tb_m3, c.rate, d.vix
-	from
-	a_index.dsp500 as a
-	left join
-	myVIX.frb_tb3m as b
-	on a.caldt = b.date
-	left join 
-	optionm.idxdvd as c
-	on c.secid = 108105 and a.caldt = c.date
-	left join
-	vix.cboe as d
-	on a.caldt = d.date;
+    create table myVIX.vixData
+    as select a.caldt, a.spindx, a.sprtrn, b.tb_m3, c.rate, d.vix
+    from
+    a_index.dsp500 as a
+    left join
+    myVIX.frb_tb3m as b
+    on a.caldt = b.date
+    left join 
+    optionm.idxdvd as c
+    on c.secid = 108105 and a.caldt = c.date
+    left join
+    vix.cboe as d
+    on a.caldt = d.date;
 quit;
 
 data myVIX.vixData;
-	set myVIX.vixData;
-	if sprtrn =. then delete;
-	rate = rate / 100;
-	TB_m3 = TB_m3 / 100;
-	vix = vix / 100;
-	format vix 6.4;
+    set myVIX.vixData;
+    if sprtrn =. then delete;
+    rate = rate / 100;
+    TB_m3 = TB_m3 / 100;
+    vix = vix / 100;
+    format vix 6.4;
 run;
 
 proc sql;
