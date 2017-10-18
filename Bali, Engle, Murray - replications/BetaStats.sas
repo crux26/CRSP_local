@@ -36,19 +36,19 @@ options sasautos=('D:\Dropbox\GitHub\CRSP_local\myMacro\', SASAUTOS) MAUTOSOURCE
 /*-----------------------------------------*/
 %include mymacro('rrloop.sas');
 %rrloop(data=bem.dsf_smaller, out_ds=bem.beta1m, model_equation=exret=mktrf, id=permno, date=date,
-start_date=&begdate, end_date=&enddate, freq=month, s=1, n=1, regprint=noprint, minwin=15);
+start_date=&begdate, end_date=&enddate, freq=month, step=1, n=1, regprint=noprint, minwin=15);
 
 %rrloop(data=bem.dsf_smaller, out_ds=bem.beta3m, model_equation=exret=mktrf, id=permno, date=date,
-start_date=&begdate, end_date=&enddate, freq=month, s=1, n=3, regprint=noprint, minwin=50);
+start_date=&begdate, end_date=&enddate, freq=month, step=3, n=3, regprint=noprint, minwin=50);
 
 %rrloop(data=bem.dsf_smaller, out_ds=bem.beta6m, model_equation=exret=mktrf, id=permno, date=date,
-start_date=&begdate, end_date=&enddate, freq=month, s=1, n=6, regprint=noprint, minwin=100);
+start_date=&begdate, end_date=&enddate, freq=month, step=6, n=6, regprint=noprint, minwin=100);
 
 %rrloop(data=bem.dsf_smaller, out_ds=bem.beta12m, model_equation=exret=mktrf, id=permno, date=date,
-start_date=&begdate, end_date=&enddate, freq=month, s=1, n=12, regprint=noprint, minwin=200);
+start_date=&begdate, end_date=&enddate, freq=month, step=12, n=12, regprint=noprint, minwin=200);
 
 %rrloop(data=bem.dsf_smaller, out_ds=bem.beta24m, model_equation=exret=mktrf, id=permno, date=date,
-start_date=&begdate, end_date=&enddate, freq=month, s=1, n=24, regprint=noprint, minwin=450);
+start_date=&begdate, end_date=&enddate, freq=month, step=24, n=24, regprint=noprint, minwin=450);
 
 /*-----------------------------------------*/
 /* Generating "year month day". See <SummRegResult_custom> for this. */
