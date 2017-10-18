@@ -9,6 +9,7 @@ libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
 libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
+/*rate(=div), spxset contained in SPXCall, SPXPut dataset.*/
 data spxdata;
 set myoption.spxdata;
 where '01JAN1995'd<=caldt<='31DEC2015'd;
