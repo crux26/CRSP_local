@@ -8,7 +8,7 @@ libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
 libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
 libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
-
+/*datedif: BUS day difference.*/
 data myOption.spxcall_cmpt;
 	set myOption.spxcall;
 	datedif = intck('weekday',date,exdate);
@@ -36,11 +36,13 @@ proc sql;
 	myOption.spxcall_cmpt as a
 	left join
 	myOption.spxdata as b
-	on b.caldt = a.date ;
+	on b.caldt = a.date;
 quit;
 
 /*b.caldt = a.exdate - 1 is not enough, at least technically*/
 /*there exists a case that b.caldt = a.exdate - 2 (though very few)*/
+
+/*Below is to align SPXSET, the settlement price for SPX options.*/
 proc sql;
 	create table myOption.spxCall_cmpt
 	as select a.*, b.spxset as spxset_expiry
@@ -49,11 +51,12 @@ proc sql;
 	left join
 	myOption.spxdata as b
 	/*Even if a.exdate = Saturday, match it with Friday's data*/
-	on b.caldt = intnx('week',a.exdate,0)+5 ; 
+	/*Below is to select caldt=Friday only on the exdate's week where SPX option's maturity is 3rd Friday every month.*/
+	on b.caldt = intnx('week',a.exdate,0)+5
+	order by date, exdate, strike_price; 
 quit;
 
-/**/
-/**/
+/*--------------Put case---------------*/
 proc sql;
 	create table myOption.spxPut_cmpt
 	as select a.*, b.spindx, b.sprtrn, b.tb_m3, b.rate as div, b.spxset
@@ -72,7 +75,8 @@ proc sql;
 	left join
 	myOption.spxdata as b
 	/*Even if a.exdate = Saturday, match it with Friday's data*/
-	on b.caldt = intnx('week',a.exdate,0)+5 ; 
+	on b.caldt = intnx('week',a.exdate,0)+5
+	order by date, exdate, strike_price; 
 quit;
 
 data myOption.spxCall_cmpt;
