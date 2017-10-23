@@ -22,7 +22,7 @@ quit;
 /*run;*/
 
 proc sql;
-	create table myOption.spxcall_mnth
+	create table myOption.spxcall_mnth_Wed
 	as select distinct a.*
 	from myOption.spxcall_cmpt as a,
 	myOption.spxcall_cmpt as b
@@ -35,7 +35,7 @@ run;
 quit;
 
 proc sql;
-	create table myOption.spxput_mnth
+	create table myOption.spxput_mnth_Wed
 	as select distinct a.*
 	from myOption.spxput_cmpt as a,
 	myOption.spxput_cmpt as b
@@ -51,19 +51,19 @@ quit;
 /*Above parts are copied from SPXData_Trim.*/
 /**/
 /*----------------------Below is the new part.--------------------------------------*/
-data spxcall_mnth; set myoption.spxcall_mnth; run;
-data spxput_mnth; set myoption.spxput_mnth; run;
+data spxcall_mnth_Wed; set myoption.spxcall_mnth_Wed; run;
+data spxput_mnth_Wed; set myoption.spxput_mnth_Wed; run;
 
-proc sort data=spxcall_mnth; by date datedif strike_price; run;
-proc sort data=spxput_mnth; by date datedif strike_price; run;
+proc sort data=spxcall_mnth_Wed; by date datedif strike_price; run;
+proc sort data=spxput_mnth_Wed; by date datedif strike_price; run;
 
 /*------------------------------------------------------------*/
 
 proc sql;
-create table spxcall_mnth_1st as
+create table spxcall_mnth_Wed_1st as
 select a.*, min(datedif) as min_datedif
 from
-spxcall_mnth as a
+spxcall_mnth_Wed as a
 group by date
 having calculated min_datedif = datedif
 order by date, datedif, strike_price;
@@ -74,30 +74,30 @@ quit;
 /**/
 
 proc sql;
-create table spxput_mnth_1st as
+create table spxput_mnth_Wed_1st as
 select a.*, min(datedif) as min_datedif
 from
-spxput_mnth as a
+spxput_mnth_Wed as a
 group by date
 having calculated min_datedif = datedif
 order by date, datedif, strike_price;
 quit;
 /**/
 
-data myoption.spxcall_mnth_1st; set spxcall_mnth_1st; run;
-data myoption.spxput_mnth_1st; set spxput_mnth_1st; run;
+data myoption.spxcall_mnth_Wed_1st; set spxcall_mnth_Wed_1st; run;
+data myoption.spxput_mnth_Wed_1st; set spxput_mnth_Wed_1st; run;
 
 proc export data = myOption.exdateseries
 outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = spxcall_mnth_1st
+proc export data = spxcall_mnth_Wed_1st
 outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXCall_Mnth_1st.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
-proc export data = spxput_mnth_1st
+proc export data = spxput_mnth_Wed_1st
 outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXPut_Mnth_1st.xlsx"
 DBMS = xlsx REPLACE;
 run;
