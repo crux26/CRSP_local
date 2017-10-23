@@ -10,23 +10,15 @@ libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 /*datedif: BUS day difference.*/
 data myOption.spxcall_cmpt;
-	set myOption.spxcall;
+	set myOption.spxcall_mnth;
 	datedif = intck('weekday',date,exdate);
+	if 10 <= datedif <= 64 then output;
 run;
 
 data myOption.spxput_cmpt;
-	set myOption.spxput;
+	set myOption.spxput_mnth;
 	datedif = intck('weekday',date,exdate);
-run;
-
-data myOption.spxcall_cmpt;
-set myOption.spxcall_cmpt;
-where 10 <= datedif <= 64;
-run;
-
-data myOption.spxput_cmpt;
-set myOption.spxput_cmpt;
-where 10 <= datedif <= 64;
+	if 10 <= datedif <= 64 then output;
 run;
 
 proc sql;
@@ -50,7 +42,7 @@ proc sql;
 	myOption.spxcall_cmpt as a
 	left join
 	myOption.spxdata as b
-	/*Even if a.exdate = Saturday, match it with Friday's data*/
+	/*Even if a.exdate = Saturday, match it with Friday's b.caldt data*/
 	/*Below is to select caldt=Friday only on the exdate's week where SPX option's maturity is 3rd Friday every month.*/
 	on b.caldt = intnx('week',a.exdate,0)+5
 	order by date, exdate, strike_price; 
@@ -74,7 +66,7 @@ proc sql;
 	myOption.spxput_cmpt as a
 	left join
 	myOption.spxdata as b
-	/*Even if a.exdate = Saturday, match it with Friday's data*/
+	/*Even if a.exdate = Saturday, match it with Friday's b.caldt data*/
 	on b.caldt = intnx('week',a.exdate,0)+5
 	order by date, exdate, strike_price; 
 quit;
@@ -88,7 +80,7 @@ data myOption.spxCall_cmpt;
 	if opret < -1 then opret = -1;
 	informat impl_volatility delta gamma vega theta 12.6;
 	format impl_volatility delta gamma vega theta 12.6;
-	drop secid cp_flag best_bid best_offer ss_flag;
+/*	drop secid cp_flag best_bid best_offer ss_flag;*/
 	where date <='31DEC2015'd;
 run;
 
@@ -101,6 +93,6 @@ data myOption.spxPut_cmpt;
 	if opret < -1 then opret = -1;
 	informat impl_volatility delta gamma vega theta 12.6;
 	format impl_volatility delta gamma vega theta 12.6;
-	drop secid cp_flag best_bid best_offer ss_flag;
+/*	drop secid cp_flag best_bid best_offer ss_flag;*/
 	where date <= '31DEC2015'd;
 run;
