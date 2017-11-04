@@ -12,5 +12,8 @@ libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
 libname BEM "D:\Dropbox\GitHub\CRSP_local\Bali, Engle, Murray - replications";
 libname ff_repl "D:\Dropbox\WRDS\CRSP\ff_repl";
+libname VIX "D:\Dropbox\WRDS\cboe\sasdata";
+libname myVIX "D:\Dropbox\WRDS\CRSP\myVIX";
+libname OpFull "D:\Dropbox\WRDS\CRSP\myOption_full";
 
 %mend liblist_lab;

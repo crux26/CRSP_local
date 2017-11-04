@@ -10,7 +10,10 @@ libname mysas "F:\Dropbox\WRDS\CRSP\mysas";
 libname myOption "F:\Dropbox\WRDS\CRSP\myOption";
 libname myMacro "F:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "F:\optionm\sasdata";
-libname myOption "F:\Dropbox\WRDS\CRSP\myOption";
 libname BEM "F:\Dropbox\GitHub\CRSP_local\Bali, Engle, Murray - replications";
 libname ff_repl "F:\Dropbox\WRDS\CRSP\ff_repl";
+libname VIX "F:\Dropbox\WRDS\cboe\sasdata";
+libname myVIX "F:\Dropbox\WRDS\CRSP\myVIX";
+libname OpFull "F:\Dropbox\WRDS\CRSP\myOption_full";
+
 %mend liblist_dorm;
