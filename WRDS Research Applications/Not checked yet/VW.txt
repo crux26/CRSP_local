@@ -1,0 +1,158 @@
+/*  Program  :   vw.sas
+    Modified :   WRDS Staff (Yuxing Yan)
+    Version  :   1.2  (May 24, 2005)
+    Modified :   2/15/2006
+
+    Program Description:
+    Usage : Calculate compounding return of stock and value-weighted market return
+	    using one year daily return over the time period starts n_month_after, e.g., 
+            3 months after fiscal year and month end
+
+      1) INPUT file format 1:
+	    1st line  : CUSIP FYE FME
+            rest lines: CUSIP, Fiscal Year, Fiscal Month End
+
+CUSIP FYE FME
+29274A10 1993 6
+29274A10 1994 6
+05978R10 1998 12
+23326910 1995 2
+23326910 1996 2
+00103110 2000 10
+46603210 2003 9
+24735710 1998 8
+24735710 1999 8
+
+     2) part of output is here (vw.out):
+CUSIP   FYE FME calyear begdate  enddate PERMNO   compnd compnd_m   minret   maxret  n n_miss n_dot_p
+29274A10 1993  6 1993 19931001 19940930 10001   0.15292  0.02420 -0.06349  0.08824 253 0 0
+29274A10 1994  6 1994 19941001 19950930 10001  -0.06432  0.28244 -0.09091  0.10000 252 0 0
+05978R10 1998 12 1998 19990401 20000331 10002  -0.24040  0.26281 -0.11602  0.11538 254 0 0
+23326910 1995  2 1996 19960601 19970531 10012  -0.56977  0.22351 -0.15663  0.41667 252 0 0
+23326910 1996  2 1997 19970601 19980531 10012  -0.05405  0.29655 -0.22105  0.48438 251 0 0
+00103110 2000 10 2000 20010201 20020131 10025  -0.27123 -0.15990 -0.16387  0.07540 248 0 0
+46603210 2003  9 2003 20040101 20041231 10026   0.30192  0.13024 -0.06682  0.10461 252 0 0
+24735710 1998  8 1998 19981201 19991130 79255  -0.32231  0.23255 -0.16154  0.10680 252 0 0
+24735710 1999  8 1999 19991201 20001130 79255  -0.10007 -0.05716 -0.08602  0.13028 254 0 0
+
+
+     3) n_month_after is the number of months after the fiscal year end. 
+        users can change it
+
+     4) ID is the code assigned to each input file
+ 	Here we assume there are multiple entries with the same CUSIP
+
+     5) Drop any missing values, i.e., if there is not single valid return 
+
+     6) market index used is VWRETD in SAS data set of  dsi
+        dsi: Daily Stock - Calendar/Indices 
+        users can use other market indeices. 
+*/
+
+options nodate nocenter nonumber ps=max ls=72 fullstimer;
+libname crsp '/wrds/crsp/sasdata';
+%let n_month_after=3;
+
+title ' get CUSIP FYE FME and Calendar year';
+data temp;
+     infile 'vw.in' firstobs=2;
+     input CUSIP $ FYE FME;
+     ID=_N_;
+     calyear=FYE;
+     if 1<=FME<=5 then calyear=FYE+1;
+proc print data=temp(obs=10); run;
+
+title " Move &n_month_after months later";
+data temp2;
+     set temp;
+     format begdate enddate date9.;
+     m=fme+&n_month_after+1;
+     y=calyear;
+     if fme+&n_month_after+1>12 then do
+	 m=mod(fme+&n_month_after+1,12);
+         y=calyear+1;
+     end;
+     begdate=mdy(m,1,y);
+     enddate=intnx('month',begdate,12)-1;
+proc print data=temp2(obs=10); run;
+
+title ' get data from dsfnames';
+data temp3;
+     set crsp.dsfnames;
+     keep cusip permno st_date end_date;
+proc sort nodupkey; by cusip permno st_date end_date;run;
+proc print data=temp3(obs=4); run;
+
+
+title ' merge  temp4';
+proc sort data=temp2;by cusip;run;
+proc sort data=temp3;by cusip;run;
+data temp4;
+     merge temp2(in=a) temp3(in=b);
+     by cusip;
+     if a and b;
+     drop y m;
+proc print data=temp4(obs=5); run;
+
+title 'get ret from crsp.dsf ';
+proc sql;
+     create table dsf 
+     as select x.ID, x.begdate,x.enddate, s.*
+     from temp4 as x 
+     left join  crsp.dsf (keep= date permno ret) as  s
+     on s.permno = x.permno and (x.begdate <= s.date <= x.enddate);
+quit;
+proc print data=dsf(obs=3); run;
+
+title ' get index';
+data index;
+     set crsp.dsi;
+     keep date vwretd;
+proc print data=index(obs=3); run;
+
+
+title ' merge dsf and dsi';
+proc sort data=dsf;by date;
+proc sort data=index;by date;
+data temp10;
+     merge dsf(in=a) index(in=b);
+     by date;
+     if a and b;
+proc print data=temp10(obs=10); run;
+
+
+title ' get compound return ';
+proc sql;
+     create table compound as
+     select ID,permno, 
+     exp(sum(log(1+ret   ))) - 1 as compnd, min(ret) as minret, max(ret) as maxret,
+     exp(sum(log(1+vwretd))) - 1 as compnd_m, 
+     n(ret)    as n,   nmiss(ret)    as n_miss,   sum(ret=.P) as n_dot_p
+     from temp10(keep=ID permno date ret begdate enddate vwretd)
+     where begdate<=date<=enddate
+     group by ID;
+quit; 
+run;
+proc print data=compound(obs=4); run;
+proc sort data=compound nodupkey;
+     by ID PERMNO compnd compnd_m minret maxret  n n_miss n_dot_p;
+run;
+proc print data=compound(obs=10); run;
+
+proc sort data=temp4;by ID;
+proc sort data=compound;by ID;
+data final;
+     merge temp4(in=a) compound;
+     by ID;
+     format begdate enddate yymmddn8.;
+proc print data=final(obs=10); 
+     var CUSIP  FYE FME calyear begdate enddate PERMNO compnd compnd_m minret maxret n n_miss n_dot_p;
+run;
+
+data _NULL_;
+    set final;
+    file 'vw.out'; 
+    if _N_=1 then put 'CUSIP   FYE FME calyear begdate  enddate PERMNO   compnd compnd_m   minret   maxret  n n_miss n_dot_p';
+    put  CUSIP $8. ' ' FYE 4. ' ' FME 2. ' ' calyear 4. ' ' begdate yymmddn8. ' ' enddate yymmddn8. 
+	 ' ' PERMNO ' '  compnd 8.5 ' ' compnd_m 8.5 ' ' minret 8.5 ' '  maxret 8.5 ' ' n 3. ' '  n_miss n_dot_p;
+run;

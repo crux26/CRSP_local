@@ -1,0 +1,232 @@
+/*  Program  :   size.sas
+    Modified :   WRDS Staff (Yuxing Yan)
+    Version  :   1.2  (May 24, 2005)
+    Modified :   2/15/2006
+
+    Program Description:
+    Usage : Calculate compounding return of stock and corresponding size based decile return by 
+	    using one year daily return over the time period starts n_month_after, e.g., 
+            3 months after fiscal year and month end
+
+      1) INPUT file format 1:
+	    1st line  : CUSIP FYE FME
+            rest lines: CUSIP, Fiscal Year, Fiscal Month End
+
+CUSIP FYE FME
+29274A10 1993 6
+29274A10 1994 6
+05978R10 1998 12
+23326910 1995 2
+23326910 1996 2
+00103110 2000 10
+46603210 2003 9
+24735710 1998 8
+24735710 1999 8
+
+     2) A text output is size.out: several lines are here.
+CUSIP, PERMNO,  FYE, FME, begdate enddate ST_DATE END_DATE capn compret compnd_decile n
+29274A10 10001  1993  6 19931001 19940930 19860109 20041231   3  0.152918  0.014915     253
+29274A10 10001  1994  6 19941001 19950930 19860109 20041231   3 -0.064315  0.169981     252
+05978R10 10002  1998 12 19990401 20000331 19860110 20041231   5 -0.240402  0.162410     254
+23326910 10012  1995  2 19960601 19970531 19860122 20041231   4 -0.569767  0.148590     252
+23326910 10012  1996  2 19970601 19980531 19860122 20041231   6 -0.054054  0.224065     251
+00103110 10025  2000 10 20010201 20020131 19860130 20041231   6 -0.271229  0.064532     248
+46603210 10026  2003  9 20040101 20041231 19860204 20041231   7  0.301917  0.247928     252
+24735710 79255  1998  8 19981201 19991130 19930630 20041231   9 -0.322308  0.033691     252
+24735710 79255  1999  8 19991201 20001130 19930630 20041231   9 -0.100072  0.121123     254
+     
+     3) n_month_after is the number of months after the fiscal year end. 
+        users can change it, see n_month=4 below
+
+     4) ID is the code assigned to each input file
+	Here we assume there are multiple entries with the same CUSIP
+
+     5) Drop any missing values, i.e., if there is not single valid return then the 
+	corresponding compounding return is -99.0
+
+     6) mport1 data set: Indices - Year-end Cap. Deciles - NYSE/AMEX/NASDAQ 
+
+     7) This program uses  dsic SAS data set. 
+        dsia Indices - Indices/Cap. Deciles - NYSE - Daily 
+        dsib Indices - Indices/Cap. Deciles - AMEX - Daily 
+        dsic Indices - Indices/Cap. Deciles - NYSE/AMEX - Daily 
+        dsio Indices - Indices/Cap. Deciles - NASDAQ - Daily 
+        dsix Indices - Indices/Cap. Deciles - NYSE/AMEX/NASDAQ - Daily 
+     
+     8) A potential problem is that the capn assignment might change if the time period 
+	crosses two years.
+*/
+     
+
+options nodate nocenter nonumber ps=max ls=72 fullstimer;
+
+libname crsp '/wrds/crsp/sasdata';
+%let n_month_after=3;
+
+title ' get CUSIP FYE FME and Calendar year';
+data temp;
+     infile 'vw.in' firstobs=2;
+     input CUSIP $ FYE FME;
+     ID=_N_;
+     calyear=FYE;
+     if 1<=FME<=5 then calyear=FYE+1;
+proc print data=temp(obs=10); run;
+
+title " Move &n_month_after months later";
+data temp2;
+     set temp;
+     format begdate enddate date9.;
+     m=fme+&n_month_after+1;
+     y=calyear;
+     if fme+&n_month_after+1>12 then do
+	 m=mod(fme+&n_month_after+1,12);
+         y=calyear+1;
+     end;
+     begdate=mdy(m,1,y);
+     enddate=intnx('month',begdate,12)-1;
+     year=y-1;
+proc print data=temp2(obs=10); run;
+
+title ' get data from dsfnames';
+data temp3;
+     set crsp.dsfnames;
+     keep cusip permno st_date end_date;
+proc sort nodupkey; by cusip permno st_date end_date;run;
+proc print data=temp3(obs=4); run;
+
+
+title ' merge  temp4';
+proc sort data=temp2;by cusip;run;
+proc sort data=temp3;by cusip;run;
+data temp4;
+     merge temp2(in=a) temp3(in=b);
+     by cusip;
+     if a and b;
+     drop y m;
+proc print data=temp4(obs=40); run;
+
+
+title ' get decile capn';
+data temp33;
+     set crsp.dport1;
+     keep permno year capn;
+run;
+proc print data=temp33(obs=10);run;
+
+
+title ' match capn';
+proc sort data=temp4;by permno year;run;
+proc sort data=temp33;by permno year;run;
+data temp34;
+     merge temp4(in=a) temp33(in=b);
+     by permno year;
+     if a ;
+proc print data=temp34(obs=16);run;
+
+
+title ' here    ';
+proc print data=temp34(obs=16);
+     var ID permno begdate enddate capn;
+run;
+
+title ' from dsic ';
+data temp40;
+     set crsp.dsic;
+     format date date9.;
+     date=caldt;
+     keep date decret1-decret10;
+proc print data=temp40(obs=16);run;
+
+
+title ' tranpose ';
+proc transpose data=temp40 out=temp41;
+     by date;
+     var decret1-decret10;
+proc print data=temp41(obs=16);run;
+
+
+data temp41;
+     set temp41;
+     tt=_name_;
+     decret=col1;
+     drop _label_;
+     capn2=input(substr(tt,7,2),2.);
+     keep date _name_ decret capn2 ;
+proc print data=temp41(obs=16);run;
+
+
+title 'get decile ';
+proc sql;
+     create table decile 
+     as select x.ID, s.date, s.decret
+     from temp34  as x, temp41 as s 
+     where x.capn = s.capn2 and (x.begdate <= s.date <= x.enddate);
+quit;
+proc print data=decile(obs=10); run;
+
+
+
+title 'get ret from crsp.dsf ';
+proc sql;
+     create table dsf 
+     as select x.ID, s.*
+     from temp34 as x 
+     left join  crsp.dsf (keep= date permno ret) as  s
+     on s.permno = x.permno and (x.begdate <= s.date <= x.enddate);
+quit;
+proc print data=dsf(obs=10); run;
+
+
+
+title ' merge ';
+proc sort data=decile;by ID date;
+proc sort data=dsf;by ID date;
+data temp50;
+     merge decile dsf;
+     by ID date;
+proc print data=temp50(obs=10); run;
+
+
+title " get log ret  ";
+data temp51;   
+     set temp50;
+     ret2=log(ret+1);
+     decret2=log(decret+1);
+     keep permno date ret ret2 decret decret2 ID;
+proc print data=temp51(obs=7); run;
+
+
+title ' get Holding period return by ID ';
+proc sort data=temp51;by ID;run;
+proc means data=temp51 noprint;
+     var ret2 decret2;
+     by ID permno;
+     output out=test(drop=_type_ _freq_) sum(ret2)=HPR1 n(ret2)=n  
+	 sum(decret2)=HPR2 n(decret2)=n2;
+proc print data=test (obs=20); run;
+
+
+title ' transfer back to simple reutrn';
+data test2; 
+     set test;
+     compret=exp(HPR1)-1;
+     compnd_decile=exp(HPR2)-1;
+     drop HPR1 HPR2;
+proc print data=test2(obs=20); run;
+
+
+data final;
+     merge test2(in=a) temp34(in=b);
+     by ID permno;
+     if a and b;
+run;
+
+
+data _NULL_;
+    set final;
+    file 'size.out'; 
+    if _N_=1 then put 'CUSIP, PERMNO,  FYE, FME, begdate enddate ST_DATE END_DATE capn compret compnd_decile n';
+    put  CUSIP $8. ' ' PERMNO ' ' FYE 4. ' ' FME 2. ' ' begdate yymmddn8. ' ' enddate yymmddn8. 
+	 ' ' ST_DATE yymmddn8. ' ' END_DATE yymmddn8. ' ' capn 3. ' ' compret 9.6 ' ' compnd_decile 9.6 ' ' n 7.;
+run;
+

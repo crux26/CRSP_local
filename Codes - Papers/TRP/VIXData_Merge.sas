@@ -41,25 +41,26 @@ data myVIX.vixData;
     format vix 6.4;
 run;
 
-proc sql;
-create table myVIX.VIXData
-as select a.*, b.vix as vix_bus21
-from
-myVIX.VIXData as a
-left join
-myVIX.VIXData as b
-on a.caldt = intnx('weekday',b.caldt,21);
-quit;
 
-data myVIX.VIXData;
-set myVIX.VIXData;
-vix_lag21 = lag21(vix);
-run;
-
-data myVIX.VIXData;
-set myVIX.VIXData;
-if tb_m3 =. then delete;
-if vix =. then delete;
-if vix_bus21 =. then delete;
-if vix_lag21 =. then delete;
-run;
+/*proc sql;*/
+/*create table myVIX.VIXData*/
+/*as select a.*, b.vix as vix_bus21*/
+/*from*/
+/*myVIX.VIXData as a*/
+/*left join*/
+/*myVIX.VIXData as b*/
+/*on a.caldt = intnx('weekday',b.caldt,21);*/
+/*quit;*/
+/**/
+/*data myVIX.VIXData;*/
+/*set myVIX.VIXData;*/
+/*vix_lag21 = lag21(vix);*/
+/*run;*/
+/**/
+/*data myVIX.VIXData;*/
+/*set myVIX.VIXData;*/
+/*if tb_m3 =. then delete;*/
+/*if vix =. then delete;*/
+/*if vix_bus21 =. then delete;*/
+/*if vix_lag21 =. then delete;*/
+/*run;*/

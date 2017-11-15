@@ -268,13 +268,9 @@ output out=NYSE pctlpts = 20 to 80 by 20 pctlpre=dec;
 /* Above are breakpoints for given percentile set */
 run;
 /* -->Why not just use PROC RANK instead of PROC UNIVARIATE? */
-/* --> If most of the firms are concentrated at small size, then PROC RANK will result in*/
-/* distorted breakpoints (Will yield equal number of firms in each rank, by the way). */
+/*Just a matter of taste. For uniformly discretized percentiles, they are the same.*/
+/*Note that PROC RANK is more efficient, while PROC UNIVARIATE is more flexible and widely applicable.*/
 
-/* Thus, by using breakpoints whose values are 20, 40, 60, 80 percentiles of */
-/* the whole SIZE distribution, it will be highly likely that group=1,2 will contain far more firms than */
-/* group=5 does. */
- 
 /* Add NYSE Size Breakpoints to the Data*/
 data sizmom;
 merge sizmom NYSE;

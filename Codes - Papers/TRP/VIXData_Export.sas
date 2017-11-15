@@ -10,12 +10,23 @@ libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 libname VIX "D:\Dropbox\WRDS\cboe\sasdata";
 libname myVIX "D:\Dropbox\WRDS\CRSP\myVIX";
 
-data vixdata;
-set myvix.vixdata;
-where '01JAN1995'd<=caldt<='31DEC2015'd;
-run;
+proc sql;
+create table dateSeries_Wed as
+select distinct date from
+/*OpFull.Spxcall_dly*/
+myOption.SpxCall_mnth
+where date=intnx('week',date,0)+3;
+quit;
+
+proc sql;
+create table vixdata as
+select a.* from
+myvix.vixdata as a,
+dateSeries_Wed as b
+where a.caldt=b.date and ~missing(a.tb_m3);
+quit;
 
 proc export data = vixdata
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\VIX\VIXData\rawData\VIXData.xlsx"
+outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\VIXData.xlsx"
 DBMS = xlsx REPLACE;
 run;

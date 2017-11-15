@@ -18,8 +18,8 @@
 /*             - START, END: Start and End Dates. Example Date Format: 01JAN2000     */
 /*             - SFVARS: Stock File Vars to extract. e.g. PRC VOL SHROUT             */
 /*             - SEVARS: Event File Vars to extract. e.g. TICKER NCUSIP SHRCD EXCHCD */
-/*                  warning: including DIVAMT may result in multiple obs per period  */ 
-/*             - FILTERS: Additional screens using variables in SFVARS or SEVARS     */ 	              
+/*                  warning: including DIVAMT may result in multiple obs per period  */
+/*             - FILTERS: Additional screens using variables in SFVARS or SEVARS     */
 /*                          (default: no filters)                                      */
 /*             - OUTSET: Output Dataset Name (default: names crsp_m or crsp_d)        */
 /* ********************************************************************************* */
@@ -77,16 +77,16 @@ options nonotes;
 
 /* Get stock data */
 proc sql;
-	create table __sfdata 
-	as select *
-	from &sf (keep= permno date &sfvars)
-	where date between &sdate and &edate 
-	and permno in 
-	(select distinct permno from 
+    create table __sfdata 
+    as select *
+    from &sf (keep= permno date &sfvars)
+    where date between &sdate and &edate 
+    and permno in 
+    (select distinct permno from 
       &senames(WHERE=(&edate>=NAMEDT and &sdate<=NAMEENDT) 
          keep=permno namedt nameendt) ) /*By keeping only relevants, can boost up the calculation speed*/
-	order by permno, date; /*equivalent to PROC SORT. CREATE "VIEW" don't work with PROC SORT*/
-	quit; 
+    order by permno, date; /*equivalent to PROC SORT. CREATE "VIEW" don't work with PROC SORT*/
+    quit; 
 
 /* Get event data */
 proc sql;
@@ -103,7 +103,7 @@ proc sql;
 /*When one don't use an aggregate function, PROC SQL treats the GROUP BY clause as an ORDER BY clause*/
 /*and any aggregate functions are aplied to the entire table*/
 /*aggregate functions: avg(), mean(), max(), min(), range(), sum(), ...*/
-	where a.date >= b.minnamedt and a.date <= &edate and a.permno =b.permno 
+    where a.date >= b.minnamedt and a.date <= &edate and a.permno =b.permno 
 /*Why not just &sdate instead of b.minnamedt?*/
    order by a.permno, a.date;
    quit;
@@ -132,7 +132,7 @@ by permno date; retain &sevars_l;
   %if %sysfunc(index(&eventvars,&var))>0 %then
    %do; 
      if eventdata or first.permno then &var_l = &var. ;
-	 else if not eventdata then &var = &var_l. ;
+     else if not eventdata then &var = &var_l. ;
    %end;
 %end;
 if eventdata and not stockdata then delete; 
