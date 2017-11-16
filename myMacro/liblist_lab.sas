@@ -15,6 +15,6 @@ libname ff_repl "D:\Dropbox\WRDS\CRSP\ff_repl";
 libname VIX "D:\Dropbox\WRDS\cboe\sasdata";
 libname myVIX "D:\Dropbox\WRDS\CRSP\myVIX";
 libname OpFull "D:\Dropbox\WRDS\CRSP\myOption_full";
-libname HighMmt "D:\Dropbox\GitHub\CRSP_local\Codes - Papers\HigherMoments";
+libname HighMmt "D:\Dropbox\GitHub\CRSP_local\Codes - Papers\HigherMoments\data";
 
 %mend liblist_lab;
