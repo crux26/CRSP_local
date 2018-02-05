@@ -1,5 +1,4 @@
-/*BY:
-order should be year, month, date.*/
+/*BY: order should be year, month, date.*/
 
 /*This is because in PROC TRANSPOSE, date's format is YYYYMMDD and reads this from left to right. */
 %macro SummRegResult_custom(data=, out=, var=, by=);
