@@ -18,7 +18,7 @@
 /*             - LAG:     number of lags to be used in the Newey-West adjustments    */
 /* ********************************************************************************* */
 
-%MACRO FM (DATA=, OUT=,DATEVAR=,DEPVAR=, INDVARS=,LAG=);
+%MACRO FM (DATA=, OUT=, DATEVAR=, DEPVAR=, INDVARS=, LAG=);
 libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
 %include myMacro('NWORDS.sas');
 
