@@ -35,10 +35,10 @@ create table BEM.msf_common
 as
 select a.*, b.shrcd
 from
-BEM.msf as a, a_stock.msenames as b
+BEM.msf as a, a_stock.stocknames as b
 where a.permno = b.permno &
 ( b.shrcd in (10,11) ) &
-b.namedt <= a.date <= b.nameendt;
+b.namedt <= a.date <= b.nameenddt;
 /*( b.shrcd in (10,11) ): common stocks only*/
 quit;
 

@@ -2,15 +2,6 @@
 /*%include myMacro('SetDate.sas'); WILL NOT work unless */
 /*-SASINITIALFOLDER "D:\Dropbox\GitHub\CRSP_local" added to sasv9.cfg in ...\nls\en and \ko*/
 
-libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
-libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
-libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
-libname ff "D:\Dropbox\WRDS\ff\sasdata";
-libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
-libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
-libname BEM "D:\Dropbox\GitHub\CRSP_local\Bali, Engle, Murray - replications";
-
 %let begdate = '01JAN1988'd;
 %let enddate = '31DEC2012'd;
 /*%let enddate = '31DEC1989'd;*/
@@ -26,11 +17,11 @@ create table BEM.msf_common
 as
 select a.*, b.shrcd
 from
-BEM.msf as a, a_stock.msenames as b
+BEM.msf as a, a_stock.stocknames as b
 where a.permno = b.permno &
 /*(b.shrcd = 10 or b.shrcd = 11) &*/
 ( b.shrcd in (10,11) ) &
-b.namedt <= a.date <= b.nameendt;
+b.namedt <= a.date <= b.nameenddt;
 quit;
 
 proc sql;
@@ -41,7 +32,7 @@ proc sql;
 		BEM.msf_common as a
 	left join
 		BEM.msia as b
-	on a.date = b.date
+	on a.date = b.caldt
 	left join
 	ff.factors_monthly as c
 	on a.date = c.dateff;
@@ -138,7 +129,8 @@ run;
 
 /*Avg of year is dropped as it is meaningless*/
 %include myMacro('ObsAvg.sas');
-%ObsAvg(data=BEM.FactorLoadingMPrdcStat, out=BEM.FactorLoadingMAvgStat, by=descending coeff, drop=_TYPE_ _FREQ_ year);
+%ObsAvg(data=BEM.FactorLoadingMPrdcStat, out=BEM.FactorLoadingMAvgStat, by=coeff, drop=_TYPE_ _FREQ_ year);
+/*%ObsAvg(data=BEM.FactorLoadingMPrdcStat, out=BEM.FactorLoadingMAvgStat, by=descending coeff, drop=_TYPE_ _FREQ_ year);*/
 
 data BEM.FactorLoadingMAvgStat;
 	retain year coeff mean StdDev Skew Kurt Min p5 p25 median p75 p95 max n;
