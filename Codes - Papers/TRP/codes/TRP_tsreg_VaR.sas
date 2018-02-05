@@ -5,6 +5,7 @@ proc model data=&data.;
     &RegkeyVar. = a + b*VIX;
     fit &RegkeyVar. / gmm kernel=(bart, %eval(&lag.+1), 0) vardef=n;
     ods output parameterEstimates=&out.;
+	ods output ResidSummary=&out._Rsq;
 run;
 quit;
 

@@ -1,7 +1,7 @@
-%macro tsreg_LoopOnExret(RegkeyVar=, out=);
+%macro tsreg_LoopOnExret_RV(RegkeyVar=, out=);
     %let exret = exret_lead1W;
 
-    %TRP_tsreg_exret_VaR(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
+    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
         out=tsreg_&exret._&RegkeyVar., lag=&lag);
 
     data tsreg_&exret._&RegkeyVar._;
@@ -12,7 +12,7 @@
 
     %let exret = exret_lead2W;
 
-    %TRP_tsreg_exret_VaR(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
+    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
         out=tsreg_&exret._&RegkeyVar., lag=&lag);
 
     data tsreg_&exret._&RegkeyVar._;
@@ -23,7 +23,7 @@
 
     %let exret = exret_lead3W;
 
-    %TRP_tsreg_exret_VaR(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
+    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
         out=tsreg_&exret._&RegkeyVar., lag=&lag);
 
     data tsreg_&exret._&RegkeyVar._;
@@ -34,7 +34,7 @@
 
     %let exret = exret_lead1M;
 
-    %TRP_tsreg_exret_VaR(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
+    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
         out=tsreg_&exret._&RegkeyVar., lag=&lag);
 
     data tsreg_&exret._&RegkeyVar._;
@@ -45,7 +45,7 @@
 
     %let exret = exret_lead2M;
 
-    %TRP_tsreg_exret_VaR(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
+    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
         out=tsreg_&exret._&RegkeyVar., lag=&lag);
 
     data tsreg_&exret._&RegkeyVar._;
@@ -56,7 +56,7 @@
 
     %let exret = exret_lead3M;
 
-    %TRP_tsreg_exret_VaR(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
+    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
         out=tsreg_&exret._&RegkeyVar., lag=&lag);
 
     data tsreg_&exret._&RegkeyVar._;
@@ -67,7 +67,7 @@
 
     %let exret = exret_lead6M;
 
-    %TRP_tsreg_exret_VaR(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
+    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
         out=tsreg_&exret._&RegkeyVar., lag=&lag);
 
     data tsreg_&exret._&RegkeyVar._;
@@ -92,4 +92,4 @@
 			tsreg_exret_lead6M_&RegkeyVar._;
     quit;
 
-%mend tsreg_LoopOnExret;
+%mend tsreg_LoopOnExret_RV;
