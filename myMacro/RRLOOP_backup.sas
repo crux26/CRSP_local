@@ -59,7 +59,7 @@ run;
 * First end date (idate2) is n periods after the start date;
 
 %let idate2= %sysfunc(intnx(&freq,&sdate1,(&n-1),end));
-%let idate1= %sysfunc(intnx(&freq,&idate2,-&n+1,begin));
+%let idate1= %sysfunc(intnx(&freq,&idate2,-&n+1,end));
 
 /*%put First loop: &idate1 -- &idate2; */
 /*%put   Loop through: &sdate2; */
