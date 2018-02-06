@@ -28,16 +28,8 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
         %let by_id= by &id;
 
     * Determine date range variables;
-    %if &freq.=month or &freq.=m %then
-        %do;
-            %let sdate1 = %sysfunc(intnx(&freq, &start_date, 0, end));
-            %let sdate2 = %sysfunc(intnx(&freq, &end_date, 0, end));
-        %end;
-    %else
-        %do;
-            %let sdate1 =  %sysfunc(intnx(&freq, &start_date, 0, same));
-            %let sdate2 =  %sysfunc(intnx(&freq, &end_date, 0, same));
-        %end;
+    %let sdate1 = %sysfunc(intnx(&freq, &start_date, 0, same));
+    %let sdate2 = %sysfunc(intnx(&freq, &end_date, 0, same));
 
     * Make start and end date if missing;
     %if &start_date = %str() | &end_date = %str() %then
@@ -76,28 +68,16 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
     * First end date (idate2) is n periods after the start date;
     /*Defines idate1 first, w.r.t. &sdate1. Then defines idate2 w.r.t. &idate1. */
     /* By doing so, "idate2" is "today". */
-	
-	/*"Floor" idate1 by sdate1 and "Cap" idate2 by sdate2.*/
-    %if &freq.=month or &freq.=m %then
-        %do;
-            %let idate1 = %sysfunc(intnx(&freq, &sdate1,-&n+1, end));
-			%let idate1 = %sysfunc(max(&sdate1, &idate1));
-        %end;
-    %else
-        %do;
-            %let idate1 = %sysfunc(intnx(&freq,&sdate1,-&n+1, same));
-			%let idate1 = %sysfunc(max(&sdate1, &idate1));
-        %end;
+    /*"Floor" idate1 by sdate1 and "Cap" idate2 by sdate2.*/
+    %let idate1 = %sysfunc(intnx(&freq, &sdate1,-&n+1, begin));
+    %let idate1 = %sysfunc(max(&sdate1, &idate1));
 
     /*%put First loop: &idate1 -- &idate2; */
     /*%put Loop through: &sdate2; */
     /*Before below code runs, sdate1='ddmmmyyy'd, which is NOT "numeric date".*/
     /* Hence, "(&idate2 > &sdate2)" returns an error. */
     /* However, if the above comparison is made outside the macro, it runs without an error. */
-    /* Don't see why, but below changes date format from "character date" to "numeric date". */
-
-
-	%if (&idate1 > &sdate2) %then
+    %if (&idate1 > &sdate2) %then
         %do;
             * Dates are not acceptable-- show problem, do not run loop;
             %put PROBLEM -- end date for loop exceeds range  : ( &idate2 > &sdate2 );
@@ -107,22 +87,12 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
             *Dates are accepted-- run loops;
             %put RRLOOP running...;
 
-            proc printto log=junk;
-            run;
-
+            /*            proc printto log=junk;*/
+            /*            run;*/
             %do %while(&idate1 <= &sdate2);
 
                 /* Define loop end date (idate2) based on inherited start date (idate1). */
-                %if &freq.=month or &freq.=m %then
-                    %do;
-                        %let idate2= %sysfunc(intnx(&freq, &idate1, (&n-1), end));
-                    %end;
-                %else
-                    %do;
-                        %let idate2= %sysfunc(intnx(&freq, &idate1, (&n-1), same));
-                    %end;
-				
-
+                %let idate2= %sysfunc(intnx(&freq, &idate1, (&n-1), end));
 
                 /*  %put  Loop: -- &idate1 &idate2;*/
                 proc datasets nolist;
@@ -148,9 +118,8 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
                 data _outest_ds;
                     set _outest_ds;
                     regobs= _p_ + _edf_;
-
-					date1 = &idate1;
-					date2= %sysfunc(min(&idate2,&sdate2));
+                    date1 = &idate1;
+                    date2= %sysfunc(min(&idate2,&sdate2));
                     format date1 date2 date9.;
 
                     /*BOTH BELOW DO NOT WORK: CALCULATED variable cannot be implemented w/i that data step*/
@@ -167,14 +136,8 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
                 run;
 
                 * Set next loop end date;
-                %if &freq.=month or &freq.=m %then
-                    %do;
-                        %let idate1= %sysfunc( intnx(&freq, &idate1, &step, end) );
-                    %end;
-                %else
-                    %do;
-                        %let idate1= %sysfunc( intnx(&freq, &idate1, &step, same) );
-                    %end;
+                /*idate1 previously set as 'END', so 'SAME' here retains 'END'.*/
+                %let idate1= %sysfunc( intnx(&freq, &idate1, &step, same) );
             %end;
 
             *end of loop;
@@ -197,8 +160,7 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
         delete _all_ds _outest_ds;
     quit;
 
-    proc printto;
-    run;
-
+    /*    proc printto;*/
+    /*    run;*/
     %put RRLOOP done.;
 %mend rrloop;
