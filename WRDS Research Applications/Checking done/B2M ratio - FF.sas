@@ -131,7 +131,7 @@ run;
 /* BM_COMP contains the B/M ratios for the entire Compustat Universe */
 
 proc sql; create table bm_comp
-as select a.gvkey, a.datadate format date9., a.calyear, a.fyear, 
+as select a.gvkey, a.datadate format date9., a.calyear, a.fyr, a.fyear, 
           a.prcc_f, a.prcc_c,b.prc_dec, a.curcd, a.sich,
           a.BE, a.mcap_c, b.mcap_dec, mdy(12,31,a.fyear) as fyear_end, 
        	  coalesce( ((BE>0)*BE)/mcap_c, ((BE>0)*BE)/mcap_dec) as bm_comp 
@@ -295,7 +295,7 @@ run;
  
 /* Clean the house*/
 proc sql; 
-drop table comparebmcov, comp_be, bmcomp, bmcrsp, bm_comp,
+drop table comparebmcov, comp_be, bmcomp, bm_comp,
            bm_comp_crsp, medians, temp
       view comp_extract, mvalue;
 quit; 

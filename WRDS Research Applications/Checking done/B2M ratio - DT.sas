@@ -160,9 +160,9 @@ run;
 /* the order of the listed arguments                                 */
 /* MB_COMP contains the M/B ratios for the entire Compustat Universe */
 proc sql; create table bm_comp 
-as select a.gvkey, a.datadate format date9., a.calyear, a.fyear,  
+as select a.gvkey, a.datadate format date9., a.calyear, a.fyr, a.fyear,  
 a.prcc_f, a.prcc_c,b.prc_dec, a.curcd, a.sich, 
-a.be, a.mcap_c, b.mcap_dec, mdy(12,31,a.fyear) as fyear_end,  
+a.be, a.mcap_c, b.mcap_dec, mdy(12,31,a.fyear) as fyear_end format=date9.,  
 coalesce( ( (be>0)*be/mcap_c), ( (be>0)*be)/mcap_dec ) as bm_comp 
 from comp_be as a left join mvalue as b 
 on a.gvkey=b.gvkey and a.fyear=year(b.datadate) and a.curcd=b.curcdm 
