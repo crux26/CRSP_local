@@ -6,3 +6,10 @@
 *.sas7bdat
 *.sas7bcat
 *.sas7bitm
+
+# MS Word
+*.doc
+*.docx
+
+# MS Excel
+*.xlsx
