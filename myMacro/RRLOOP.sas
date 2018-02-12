@@ -87,8 +87,9 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
             *Dates are accepted-- run loops;
             %put RRLOOP running...;
 
-            /*            proc printto log=junk;*/
-            /*            run;*/
+            proc printto log=junk;
+            run;
+
             %do %while(&idate1 <= &sdate2);
 
                 /* Define loop end date (idate2) based on inherited start date (idate1). */
@@ -160,7 +161,8 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
         delete _all_ds _outest_ds;
     quit;
 
-    /*    proc printto;*/
-    /*    run;*/
+    proc printto;
+    run;
+
     %put RRLOOP done.;
 %mend rrloop;
