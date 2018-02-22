@@ -1,4 +1,3 @@
-/*NOT CHECKED YET*/
 /* USE "Size Portfolios for CRSP common stocks and NYSE Size Break Points.sas" instead. */
 
 /*Usually SIZE breakpoints use NYSE stocks only, so this file, using all CRSP stocks, */
