@@ -18,9 +18,9 @@
 /*             - LAG:     number of lags to be used in the Newey-West adjustments    */
 /* ********************************************************************************* */
 
-%MACRO FM (DATA=, OUT=, DATEVAR=, DEPVAR=, INDVARS=, LAG=);
-libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
-%include myMacro('NWORDS.sas');
+%MACRO FM(DATA=, OUT=, DATEVAR=, DEPVAR=, INDVARS=, LAG=);
+/*libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";*/
+/*%include myMacro('NWORDS.sas');*/
 
 /*save existing options*/
 /*while running FM, notes, mprint, source and errors are suppressed not to print anything*/
@@ -98,7 +98,10 @@ run;
 	/* Closing an unneeded destination frees some system resources */
 	ods listing close; /* suppresses printing the SAS output window ("table-like" result). */
 	ods html close; /* suppresses printing the SAS output window ("graphical/figure" result). */
-	/*Try "ods select none" & "ods select all" if needed. */
+    ods exclude all;
+    ods noresults;
+
+    /*Try "ods select none" & "ods select all" if needed. */
 	proc means data=_results n std t probt;
 	  var &var; /* VAR: k-th INDVARS. Note that INDVARS is a vector. */
 	  ods output summary=_uncorr;
@@ -120,6 +123,9 @@ run;
 	quit;
 	ods listing;
 	ods html;
+    ods exclude none;
+    ods graphics;
+    ods results;
 
 
 /*3. put the results together*/
