@@ -1,4 +1,4 @@
-%macro tsreg_exret(data=, out=, RegkeyVar=, alpha=);
+%macro tsreg_exret(data=, out=, DepVar=, IndepVarList=, alpha=);
 
     proc sql;
         create table crsp_TRP_alpha_&alpha.
@@ -26,11 +26,18 @@
     proc printto log=junk;
     run;
 
-	%RRLOOP(data=crsp_TRP_alpha_&alpha.__, out_ds=&out.,
-	model_equation=exret_1W=mkt_rf_1W TRP_, id=permno, 
-	date=date, start_date='01jan1995'd, end_date='31dec2015'd,
-	freq=month, step=3, n=3, regprint=noprint, minwin=10);
+	%let nwords = %sysfunc(countw(&IndepVarList.));	
+	%do i=1 %to &nwords;
+		%let RegkeyVar = %scan(&IndepVarList., &i.);
+		
+		%let IndepVars = mkt_rf_1M &RegkeyVar.;
 
+		%RRLOOP(data=crsp_TRP_alpha_&alpha.__, out_ds=&out._&RegkeyVar.,
+		model_equation=&DepVar.=&IndepVars., id=permno, 
+		date=date, start_date='01jan1995'd, end_date='31dec2015'd,
+		freq=month, step=3, n=3, regprint=noprint, minwin=10);
+
+	%end;
     proc printto;
     run;
 

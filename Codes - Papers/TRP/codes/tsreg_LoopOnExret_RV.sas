@@ -1,95 +1,32 @@
-%macro tsreg_LoopOnExret_RV(RegkeyVar=, out=);
-    %let exret = exret_lead1W;
+%macro tsreg_LoopOnExret_RV(DepVarList=, IndepVar=, data=, out=);
+	%let nwords=%sysfunc(countw(&DepVarList));
+	%do i2=1 %to &nwords;
+		%let DepVar = %scan(&DepVarList, &i2);
 
-    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
-        out=tsreg_&exret._&RegkeyVar., lag=&lag);
+    %TRP_tsreg_exret_VaR_RV(data=&data., DepVar=&DepVar., IndepVar=&IndepVar.,
+        out=tsreg_&DepVar._&IndepVar., lag=&lag);
 
-    data tsreg_&exret._&RegkeyVar._;
+    data tsreg_&DepVar._&IndepVar._;
         length EstType $ 32;
-        set tsreg_&exret._&RegkeyVar.;
-        EstType = "&exret._&RegkeyVar.";
+        set tsreg_&DepVar._&IndepVar.;
+        EstType = "&DepVar._&IndepVar.";
     run;
-
-    %let exret = exret_lead2W;
-
-    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
-        out=tsreg_&exret._&RegkeyVar., lag=&lag);
-
-    data tsreg_&exret._&RegkeyVar._;
-        length EstType $ 32;
-        set tsreg_&exret._&RegkeyVar.;
-        EstType = "&exret._&RegkeyVar.";
-    run;
-
-    %let exret = exret_lead3W;
-
-    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
-        out=tsreg_&exret._&RegkeyVar., lag=&lag);
-
-    data tsreg_&exret._&RegkeyVar._;
-        length EstType $ 32;
-        set tsreg_&exret._&RegkeyVar.;
-        EstType = "&exret._&RegkeyVar.";
-    run;
-
-    %let exret = exret_lead1M;
-
-    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
-        out=tsreg_&exret._&RegkeyVar., lag=&lag);
-
-    data tsreg_&exret._&RegkeyVar._;
-        length EstType $ 32;
-        set tsreg_&exret._&RegkeyVar.;
-        EstType = "&exret._&RegkeyVar.";
-    run;
-
-    %let exret = exret_lead2M;
-
-    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
-        out=tsreg_&exret._&RegkeyVar., lag=&lag);
-
-    data tsreg_&exret._&RegkeyVar._;
-        length EstType $ 32;
-        set tsreg_&exret._&RegkeyVar.;
-        EstType = "&exret._&RegkeyVar.";
-    run;
-
-    %let exret = exret_lead3M;
-
-    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
-        out=tsreg_&exret._&RegkeyVar., lag=&lag);
-
-    data tsreg_&exret._&RegkeyVar._;
-        length EstType $ 32;
-        set tsreg_&exret._&RegkeyVar.;
-        EstType = "&exret._&RegkeyVar.";
-    run;
-
-    %let exret = exret_lead6M;
-
-    %TRP_tsreg_exret_VaR_RV(data=T_tmp_Wed_alpha_&alpha., exret=&exret., RegkeyVar=&RegkeyVar.,
-        out=tsreg_&exret._&RegkeyVar., lag=&lag);
-
-    data tsreg_&exret._&RegkeyVar._;
-        length EstType $ 32;
-        set tsreg_&exret._&RegkeyVar.;
-        EstType = "&exret._&RegkeyVar.";
-    run;
+	%end;
 
     data &out.;
-        set tsreg_exret_lead1W_&RegkeyVar._ tsreg_exret_lead2W_&RegkeyVar._ tsreg_exret_lead3W_&RegkeyVar._
-            tsreg_exret_lead1M_&RegkeyVar._  tsreg_exret_lead2M_&RegkeyVar._  tsreg_exret_lead3M_&RegkeyVar._
-			tsreg_exret_lead6M_&RegkeyVar._;
+        set tsreg_exret_lead1W_&IndepVar._ tsreg_exret_lead2W_&IndepVar._ tsreg_exret_lead3W_&IndepVar._
+            tsreg_exret_lead1M_&IndepVar._  tsreg_exret_lead2M_&IndepVar._  tsreg_exret_lead3M_&IndepVar._
+			tsreg_exret_lead6M_&IndepVar._;
     run;
 
     proc sql;
         drop table 
-			tsreg_exret_lead1W_&RegkeyVar., tsreg_exret_lead2W_&RegkeyVar., tsreg_exret_lead3W_&RegkeyVar.,
-            tsreg_exret_lead1M_&RegkeyVar.,  tsreg_exret_lead2M_&RegkeyVar.,  tsreg_exret_lead3M_&RegkeyVar.,
-			tsreg_exret_lead6M_&RegkeyVar.,
-            tsreg_exret_lead1W_&RegkeyVar._, tsreg_exret_lead2W_&RegkeyVar._, tsreg_exret_lead3W_&RegkeyVar._,
-            tsreg_exret_lead1M_&RegkeyVar._,  tsreg_exret_lead2M_&RegkeyVar._,  tsreg_exret_lead3M_&RegkeyVar._,
-			tsreg_exret_lead6M_&RegkeyVar._;
+			tsreg_exret_lead1W_&IndepVar., tsreg_exret_lead2W_&IndepVar., tsreg_exret_lead3W_&IndepVar.,
+            tsreg_exret_lead1M_&IndepVar.,  tsreg_exret_lead2M_&IndepVar.,  tsreg_exret_lead3M_&IndepVar.,
+			tsreg_exret_lead6M_&IndepVar.,
+            tsreg_exret_lead1W_&IndepVar._, tsreg_exret_lead2W_&IndepVar._, tsreg_exret_lead3W_&IndepVar._,
+            tsreg_exret_lead1M_&IndepVar._,  tsreg_exret_lead2M_&IndepVar._,  tsreg_exret_lead3M_&IndepVar._,
+			tsreg_exret_lead6M_&IndepVar._;
     quit;
 
 %mend tsreg_LoopOnExret_RV;

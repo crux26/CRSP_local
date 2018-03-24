@@ -1,22 +1,9 @@
-%macro tsreg_LoopOnExret_Nest_RV(alpha=);
-    %let alpha=&alpha.;
-
-    %let RegkeyVar = VaR_;
-    %tsreg_LoopOnExret_RV(RegkeyVar=&RegkeyVar., out=TRP.tsreg_exret_&RegkeyVar.RV_&alpha.);
-
-    %let RegkeyVar = ES_;
-    %tsreg_LoopOnExret_RV(RegkeyVar=&RegkeyVar., out=TRP.tsreg_exret_&RegkeyVar.RV_&alpha.);
-
-	%let RegkeyVar = UP_;
-    %tsreg_LoopOnExret_RV(RegkeyVar=&RegkeyVar., out=TRP.tsreg_exret_&RegkeyVar.RV_&alpha.);
-
-	%let RegkeyVar = EUP_;
-    %tsreg_LoopOnExret_RV(RegkeyVar=&RegkeyVar., out=TRP.tsreg_exret_&RegkeyVar.RV_&alpha.);
-
-	%let RegkeyVar = TRP_;
-    %tsreg_LoopOnExret_RV(RegkeyVar=&RegkeyVar., out=TRP.tsreg_exret_&RegkeyVar.RV_&alpha.);
-
-	%let RegkeyVar = ETRP_;
-    %tsreg_LoopOnExret_RV(RegkeyVar=&RegkeyVar., out=TRP.tsreg_exret_&RegkeyVar.RV_&alpha.);
-
+%macro tsreg_LoopOnExret_Nest_RV(alpha=, DepVarList=, IndepVarList=, data= );
+	%let nwords=%sysfunc(countw(&IndepVarList));
+	%do i1=1 %to &nwords;
+		%let IndepVar = %scan(&IndepVarList, &i1);
+		%put &=IndepVar;
+		%put &=DepVarList;
+	    %tsreg_LoopOnExret_RV(DepVarList=&DepVarList.., IndepVar=&IndepVar., data=&data., out=TRP.tsreg_exret_&IndepVar.RV_&alpha.);
+	%end;
 %mend tsreg_LoopOnExret_Nest_RV;
