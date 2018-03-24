@@ -1,25 +1,9 @@
-%macro AddVar_Nest(alpha=);
-%let RegkeyVar = VaR_;
-%AddVar(RegkeyVar=&RegkeyVar.,
-data=tsreg_&RegkeyVar.&alpha._, set=tsreg_&RegkeyVar.&alpha.);
+%macro AddVar_Nest(alpha=, vlist=, prefix=, postfix=);
+	%let nwords=%sysfunc(countw(&vlist));
 
-%let RegkeyVar = ES_;
-%AddVar(RegkeyVar=&RegkeyVar.,
-data=tsreg_&RegkeyVar.&alpha._, set=tsreg_&RegkeyVar.&alpha.);
-
-%let RegkeyVar = UP_;
-%AddVar(RegkeyVar=&RegkeyVar.,
-data=tsreg_&RegkeyVar.&alpha._, set=tsreg_&RegkeyVar.&alpha.);
-
-%let RegkeyVar = EUP_;
-%AddVar(RegkeyVar=&RegkeyVar.,
-data=tsreg_&RegkeyVar.&alpha._, set=tsreg_&RegkeyVar.&alpha.);
-
-%let RegkeyVar = TRP_;
-%AddVar(RegkeyVar=&RegkeyVar.,
-data=tsreg_&RegkeyVar.&alpha._, set=tsreg_&RegkeyVar.&alpha.);
-
-%let RegkeyVar = ETRP_;
-%AddVar(RegkeyVar=&RegkeyVar.,
-data=tsreg_&RegkeyVar.&alpha._, set=tsreg_&RegkeyVar.&alpha.);
+	%do i=1 %to &nwords;
+		%let RegkeyVar = %scan(&vlist, &i);
+        %AddVar(RegkeyVar=&RegkeyVar.,
+            data=tsreg_&prefix.&RegkeyVar.&alpha.&postfix._, set=tsreg_&prefix.&RegkeyVar.&alpha.&postfix.);
+        %end;
 %mend AddVar_Nest;
