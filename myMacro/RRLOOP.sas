@@ -16,7 +16,7 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
     run;
 
     * Prepare input data for by-id-date use;
-    proc sort data=&data;
+    proc sort data=&data out=tmp;
         by &id &date;
     run;
 
@@ -38,7 +38,7 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
             proc sql noprint;
                 create table _dx1 as 
                     select min(&date) as min_date, max(&date) as max_date
-                        from &data where not missing(&date);
+                        from tmp where not missing(&date);
                 select min_date into : min_date from _dx1;
                 select max_date into : max_date from _dx1;
 
@@ -104,10 +104,7 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
                 * noprint to just make output set;
                 /*  %let noprint= noprint;*/
                 /*  %if %upcase(&noprint) = yes | %upcase(&noprint) = print %then %let noprint= ;*/
-                proc reg data=&data 
-                    outest=_outest_ds edf 
-                    noprint;
-                    /*&noprint;*/
+                proc reg data=tmp outest=_outest_ds edf noprint;
                     where &date between &idate1 and %sysfunc(min(&idate2,&sdate2));
                     model &model_equation;
                     &by_id;
