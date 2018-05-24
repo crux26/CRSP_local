@@ -9,7 +9,7 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
 /*Above took 4h 19m for 1963-2016. */
 /*"date2(=min(&idate2,&sdate2))" is "Today"*/
 %macro rrloop(data= , out_ds= , model_equation= , id= , date=date ,
-            start_date= , end_date= , freq=month, step=1, n=12, regprint=noprint, minwin=);
+            start_date= , end_date= , freq=month, step=1, n=12, regprint=noprint, minwin=) / store des="Rolling regression";
     * Start with empty output data sets;
     proc datasets nolist;
         delete _all_ds _outest_ds;
@@ -87,7 +87,8 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
             *Dates are accepted-- run loops;
             %put RRLOOP running...;
 
-            proc printto log=junk;
+/*            proc printto log=junk;*/
+			options nosource nosource2 nonotes;
             run;
 
             %do %while(&idate1 <= &sdate2);
@@ -158,7 +159,8 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
         delete _all_ds _outest_ds;
     quit;
 
-    proc printto;
+/*    proc printto;*/
+	options source source2 notes;
     run;
 
     %put RRLOOP done.;

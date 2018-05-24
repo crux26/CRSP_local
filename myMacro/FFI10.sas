@@ -8,7 +8,7 @@
 /* Variables : - SIC_CODE: SIC 4-digit Industry Code                                 */
 /* ********************************************************************************* */
 
-%MACRO FFI10(sic_code);
+%MACRO FFI10(sic_code) / store DES="Fama-French's SIC code classification, 10.";
 do; format FFI10_desc $5.;
 if missing(&SIC_Code) then FFI10=.;
  else if 0100<=&SIC_Code<=0999 then do; FFI10=1; FFI10_desc='NoDur'; end;

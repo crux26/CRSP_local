@@ -1,7 +1,8 @@
 %macro TRP_tsreg(data=, DepVar=, IndepVar=, out=, lag=);
 proc model data=&data.;
     parms a b;
-    exogenous &DepVar.;
+/*    exogenous &DepVar.;*/
+	exogenous &IndepVar.;
     &DepVar. = a + b*&IndepVar.;
     fit &DepVar. / gmm kernel=(bart, %eval(&lag.+1), 0) vardef=n;
 	test a=0, b=1;

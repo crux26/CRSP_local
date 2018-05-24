@@ -1,7 +1,6 @@
 /*Nested queries example; see p.101, SQL User's Guide*/
-libname sql 'D:\Dropbox\SAS_scripts\SQL Sample dataset';
-
-proc sql;
+libname sql 'F:\Dropbox\SAS_scripts\SQL Sample dataset';
+proc sql threads;
     title 'Neighboring Cities';
     select a.City format=$10., a.State,
         a.Latitude 'Lat', a.Longitude 'Long',
@@ -21,7 +20,7 @@ proc sql;
             order by a.city;
 quit;
 
-proc sql;
+proc sql threads;
     title 'Neighboring Cities - 2';
     select a.City format=$10., a.State,
         a.Latitude 'Lat', a.Longitude 'Long',

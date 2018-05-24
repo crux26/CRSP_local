@@ -1,6 +1,9 @@
 /*This is from Stoffman(https://kelley.iu.edu/nstoffma/fe.html).*/
 /*Faster than FM(). By using ODS OUTPUT for a regression, no need to DO loop over slopes of INDEPVARS. */
-%MACRO FM2(DATA=, OUT=, DATEVAR=, DEPVAR=, INDEPVARS=, LAGS=);
+%MACRO FM2(DATA=, OUT=, DATEVAR=, DEPVAR=, INDEPVARS=, LAGS=) / store des="Fama-MacBeth regression";
+    options MSTORED;
+    options SASMSTORE=myMacro;
+    
 	%local oldoptions errors;
 	%let oldoptions=%sysfunc(getoption(mprint)) %sysfunc(getoption(notes)) %sysfunc(getoption(source));
 	%let errors=%sysfunc(getoption(errors));
@@ -32,7 +35,7 @@
 	proc reg data=_temp;
 		by &DATEVAR;
 		model &DEPVAR = &INDEPVARS;
-		ods output parameterEstimates=pe;
+		ods output ParameterEstimates=pe;
 	quit;
 
 	proc printto;
@@ -54,7 +57,7 @@
 		instruments const / intonly;
 		estimate=const;
 		fit estimate / gmm kernel=(bart,%eval(&LAGS+1),0) vardef=n;
-		ods output parameterestimates=&out;
+		ods output ParameterEstimates=&out;
 	run; quit;
 
 	proc sql;

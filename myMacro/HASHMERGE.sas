@@ -1,4 +1,4 @@
-%macro hashmerge(largeds, smallds, byvars, extravars, outds);
+%macro hashmerge(largeds, smallds, byvars, extravars, outds) / store des="Hash merge.";
 /*byvars, extravars: smallds variables.*/
     data &outds;
         call missing(%sepbycomma(&extravars));

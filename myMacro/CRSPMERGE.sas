@@ -23,12 +23,12 @@
 /*                          (default: no filters)                                      */
 /*             - OUTSET: Output Dataset Name (default: names crsp_m or crsp_d)        */
 /* ********************************************************************************* */
+%MACRO CRSPMERGE (s=m, START=01JAN2000, END=30JUN2001, SFVARS=vol prc ret shrout,
+SEVARS=ticker cusip ncusip permco permno exchcd shrcd siccd dlret, FILTERS=, OUTSET=crsp_&s.);
 
-%MACRO CRSPMERGE (s=m,START=01JAN2000,END=30JUN2001,SFVARS=vol prc ret shrout, SEVARS=ticker cusip ncusip permco permno exchcd shrcd siccd dlret,FILTERS=,OUTSET=crsp_&s.);
-
-/* Check Series: Daily or Monthly and define datasets - Default is Monthly  */
+/* Check Series: Daily or Monthly and define datasets - Default is Monthly. */
 %if &s=D %then %let s=d; %else %if &s ne d %then %let s=m;
-/*mseall and msenames are not so different*/
+/*mseall and msenames are not so different.*/
 %let sf       = mysas.&s.sf ;
 %let se       = mysas.&s.seall ;
 %let senames  = mysas.&s.senames ;

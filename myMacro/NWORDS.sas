@@ -11,7 +11,7 @@
 /* Variables : - INVAR: Input text string                                            */
 /* ********************************************************************************* */
  
-%MACRO NWORDS (INVAR);
+%MACRO NWORDS (INVAR) / store des="Counts number of words. Seems countw() can be used instead.";
 %local N W;
  
  %let invar = %sysfunc(compbl(&invar)); 

@@ -1,19 +1,20 @@
-%macro tsreg_exret_logTailRV_Lin(data=, DepVarList=, IndepVarList=, out_prefix=, lag=);
+%macro tsreg_exret_logTailRV_Lin(data=, keyvar=, DepVarList=, IndepVarList=, out_prefix=, lag=);
 	%let nwords=%sysfunc(countw(&IndepVarList));
 
 	%do i=1 %to &nwords;
 		%let IndepVar = %scan(&IndepVarList, &i);
 		%put &=IndepVar;
 		%put &=DepVarList;
-		%let nwords=%sysfunc(countw(&DepVarList));
+		%let nwords_=%sysfunc(countw(&DepVarList));
 
-		%do j=1 %to &nwords;
+		%do j=1 %to &nwords_;
 			%let DepVar = %scan(&DepVarList, &j);
 
 			proc model data=&data.;
 				parms a b c;
-				exogenous &DepVar. &IndepVar. log_VRP; *log_VRP=log_VIX - log_RV;
-				&DepVar. = a + b*&IndepVar. + c*log_VRP;
+/*				exogenous &DepVar. &IndepVar. &keyvar.; *log_VRP=log_VIX - log_RV;*/
+				exogenous &IndepVar. &keyvar.; *log_VRP=log_VIX - log_RV;
+				&DepVar. = a + b*&IndepVar. + c*&keyvar.;
 				fit &DepVar. / gmm kernel=(bart, %eval(&lag.+1), 0) vardef=n;
 				test a=0, b=1;
 				test a=0;
@@ -44,55 +45,57 @@
 			run;
 
 		%end;
-
+		
+		%let depvar_prefix = %sysfunc(scan( %sysfunc(scan(&DepVarList, 1, ' ')), 1, '_' ) );
+		/*Above would be "exret" or "sprtrn" or similar sorts.*/
 		data &out_prefix.&IndepVar.;
-			set exret_lead1W_&IndepVar._ exret_lead2W_&IndepVar._ exret_lead3W_&IndepVar._
-				exret_lead1M_&IndepVar._  exret_lead2M_&IndepVar._  exret_lead3M_&IndepVar._
-				exret_lead6M_&IndepVar._;
+			set &depvar_prefix._lead1W_&IndepVar._ &depvar_prefix._lead2W_&IndepVar._ &depvar_prefix._lead3W_&IndepVar._
+				&depvar_prefix._lead1M_&IndepVar._  &depvar_prefix._lead2M_&IndepVar._  &depvar_prefix._lead3M_&IndepVar._
+				&depvar_prefix._lead6M_&IndepVar._;
 		run;
 
 		data &out_prefix.&IndepVar.Rsq;
-			set exret_lead1W_&IndepVar.Rsq_ exret_lead2W_&IndepVar.Rsq_ exret_lead3W_&IndepVar.Rsq_
-				exret_lead1M_&IndepVar.Rsq_  exret_lead2M_&IndepVar.Rsq_  exret_lead3M_&IndepVar.Rsq_
-				exret_lead6M_&IndepVar.Rsq_;
+			set &depvar_prefix._lead1W_&IndepVar.Rsq_ &depvar_prefix._lead2W_&IndepVar.Rsq_ &depvar_prefix._lead3W_&IndepVar.Rsq_
+				&depvar_prefix._lead1M_&IndepVar.Rsq_  &depvar_prefix._lead2M_&IndepVar.Rsq_  &depvar_prefix._lead3M_&IndepVar.Rsq_
+				&depvar_prefix._lead6M_&IndepVar.Rsq_;
 		run;
 
 		data &out_prefix.&IndepVar.test;
-			set exret_lead1W_&IndepVar.test_ exret_lead2W_&IndepVar.test_ exret_lead3W_&IndepVar.test_
-				exret_lead1M_&IndepVar.test_  exret_lead2M_&IndepVar.test_  exret_lead3M_&IndepVar.test_
-				exret_lead6M_&IndepVar.test_;
+			set &depvar_prefix._lead1W_&IndepVar.test_ &depvar_prefix._lead2W_&IndepVar.test_ &depvar_prefix._lead3W_&IndepVar.test_
+				&depvar_prefix._lead1M_&IndepVar.test_  &depvar_prefix._lead2M_&IndepVar.test_  &depvar_prefix._lead3M_&IndepVar.test_
+				&depvar_prefix._lead6M_&IndepVar.test_;
 		run;
 
 /**/
 		proc sql;
 			drop table 
-				exret_lead1W_&IndepVar., exret_lead2W_&IndepVar., exret_lead3W_&IndepVar.,
-				exret_lead1M_&IndepVar.,  exret_lead2M_&IndepVar.,  exret_lead3M_&IndepVar.,
-				exret_lead6M_&IndepVar.,
-				exret_lead1W_&IndepVar._, exret_lead2W_&IndepVar._, exret_lead3W_&IndepVar._,
-				exret_lead1M_&IndepVar._,  exret_lead2M_&IndepVar._,  exret_lead3M_&IndepVar._,
-				exret_lead6M_&IndepVar._;
+				&depvar_prefix._lead1W_&IndepVar., &depvar_prefix._lead2W_&IndepVar., &depvar_prefix._lead3W_&IndepVar.,
+				&depvar_prefix._lead1M_&IndepVar.,  &depvar_prefix._lead2M_&IndepVar.,  &depvar_prefix._lead3M_&IndepVar.,
+				&depvar_prefix._lead6M_&IndepVar.,
+				&depvar_prefix._lead1W_&IndepVar._, &depvar_prefix._lead2W_&IndepVar._, &depvar_prefix._lead3W_&IndepVar._,
+				&depvar_prefix._lead1M_&IndepVar._,  &depvar_prefix._lead2M_&IndepVar._,  &depvar_prefix._lead3M_&IndepVar._,
+				&depvar_prefix._lead6M_&IndepVar._;
 		quit;
 
 		proc sql;
 			drop table 
-				exret_lead1W_&IndepVar.Rsq, exret_lead2W_&IndepVar.Rsq, exret_lead3W_&IndepVar.Rsq,
-				exret_lead1M_&IndepVar.Rsq,  exret_lead2M_&IndepVar.Rsq,  exret_lead3M_&IndepVar.Rsq,
-				exret_lead6M_&IndepVar.Rsq,
-				exret_lead1W_&IndepVar.Rsq_, exret_lead2W_&IndepVar.Rsq_, exret_lead3W_&IndepVar.Rsq_,
-				exret_lead1M_&IndepVar.Rsq_,  exret_lead2M_&IndepVar.Rsq_,  exret_lead3M_&IndepVar.Rsq_,
-				exret_lead6M_&IndepVar.Rsq_;
+				&depvar_prefix._lead1W_&IndepVar.Rsq, &depvar_prefix._lead2W_&IndepVar.Rsq, &depvar_prefix._lead3W_&IndepVar.Rsq,
+				&depvar_prefix._lead1M_&IndepVar.Rsq,  &depvar_prefix._lead2M_&IndepVar.Rsq,  &depvar_prefix._lead3M_&IndepVar.Rsq,
+				&depvar_prefix._lead6M_&IndepVar.Rsq,
+				&depvar_prefix._lead1W_&IndepVar.Rsq_, &depvar_prefix._lead2W_&IndepVar.Rsq_, &depvar_prefix._lead3W_&IndepVar.Rsq_,
+				&depvar_prefix._lead1M_&IndepVar.Rsq_,  &depvar_prefix._lead2M_&IndepVar.Rsq_,  &depvar_prefix._lead3M_&IndepVar.Rsq_,
+				&depvar_prefix._lead6M_&IndepVar.Rsq_;
 		quit;
 
 
 		proc sql;
 			drop table 
-				exret_lead1W_&IndepVar.test, exret_lead2W_&IndepVar.test, exret_lead3W_&IndepVar.test,
-				exret_lead1M_&IndepVar.test,  exret_lead2M_&IndepVar.test,  exret_lead3M_&IndepVar.test,
-				exret_lead6M_&IndepVar.test,
-				exret_lead1W_&IndepVar.test_, exret_lead2W_&IndepVar.test_, exret_lead3W_&IndepVar.test_,
-				exret_lead1M_&IndepVar.test_,  exret_lead2M_&IndepVar.test_,  exret_lead3M_&IndepVar.test_,
-				exret_lead6M_&IndepVar.test_;
+				&depvar_prefix._lead1W_&IndepVar.test, &depvar_prefix._lead2W_&IndepVar.test, &depvar_prefix._lead3W_&IndepVar.test,
+				&depvar_prefix._lead1M_&IndepVar.test,  &depvar_prefix._lead2M_&IndepVar.test,  &depvar_prefix._lead3M_&IndepVar.test,
+				&depvar_prefix._lead6M_&IndepVar.test,
+				&depvar_prefix._lead1W_&IndepVar.test_, &depvar_prefix._lead2W_&IndepVar.test_, &depvar_prefix._lead3W_&IndepVar.test_,
+				&depvar_prefix._lead1M_&IndepVar.test_,  &depvar_prefix._lead2M_&IndepVar.test_,  &depvar_prefix._lead3M_&IndepVar.test_,
+				&depvar_prefix._lead6M_&IndepVar.test_;
 		quit;
 
 

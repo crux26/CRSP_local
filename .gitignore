@@ -13,3 +13,7 @@
 
 # MS Excel
 *.xlsx
+
+# graphic files
+*.png
+*.jpg

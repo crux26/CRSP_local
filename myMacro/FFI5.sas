@@ -8,7 +8,7 @@
 /* Variables : - SIC_CODE: SIC 4-digit Industry Code                                 */
 /* ********************************************************************************* */
 
-%MACRO FFI5(sic_code);
+%MACRO FFI5(sic_code) / store DES="Fama-French's SIC code classification, 5.";
 do; format FFI5_desc $5.;
 if missing(&SIC_Code) then FFI5=.;
  else if 0100<=&SIC_Code<=0999 then do; FFI5=1; FFI5_desc='Cnsmr'; end;

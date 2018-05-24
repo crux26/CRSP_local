@@ -1,4 +1,4 @@
-%macro enquote(varlist);
+%macro enquote(varlist) / store DES="Used in %HASHMERGE().";
     %let delim=%str( );
     %let outputvar="%qscan(&varlist, 1, &delim)";
     %let i=2;

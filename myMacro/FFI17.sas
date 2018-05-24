@@ -8,7 +8,7 @@
 /* Variables : - SIC_CODE: SIC 4-digit Industry Code                                 */
 /* ********************************************************************************* */
 
-%MACRO FFI17(sic_code);
+%MACRO FFI17(sic_code) / store DES="Fama-French's SIC code classification, 17.";
 do; format FFI17_desc $5.;
 if missing(&SIC_Code) then FFI17=.;
  else if 0100<=&SIC_Code<=0199 then do; FFI17=1; FFI17_desc='Food'; end;

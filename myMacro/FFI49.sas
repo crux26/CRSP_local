@@ -8,7 +8,7 @@
 /* Variables : - SIC_CODE: SIC 4-digit Industry Code                                 */
 /* ********************************************************************************* */
 
-%MACRO FFI49(sic_code);
+%MACRO FFI49(sic_code) / store DES="Fama-French's SIC code classification, 49.";
 do; format FFI49_desc $5.;
 if missing(&SIC_Code) then FFI49=.;
  else if 0100<=&SIC_Code<=0199 then do; FFI49=1; FFI49_desc='Agric'; end;

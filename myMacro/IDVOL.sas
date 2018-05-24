@@ -89,8 +89,8 @@
         set _caldates;
         n+1;
 
-        if intnx('month',beg_date,0,'e')= /*'e' seems to stand for 'end'*/
-        intnx('month',"&mindate"d,0,'e') then call symput ('start',n);
+        if intnx('month',beg_date,0,'e')= 
+        intnx('month',"&mindate."d,0,'e') then call symput ('start',n);
 
         if intnx('month',end_date,0,'e')= intnx('month',"&maxdate"d,0,'e') then
             call symput ('finish',n);
