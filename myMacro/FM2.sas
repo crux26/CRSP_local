@@ -46,6 +46,7 @@
 	/*Since the results from this approach give a time-series,
 	it is common practice to use the Newey-West adjustment for standard errors.
 	Unlike Stata, this is somewhat complicated in SAS, but can be done as follows:*/
+/*Variable: Variable name which contains indepdent variables' names.*/
 	proc sort data=pe;
 		by variable;
 	run;
