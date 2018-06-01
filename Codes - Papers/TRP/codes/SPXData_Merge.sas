@@ -1,12 +1,12 @@
 /*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim -> SPXData_Export */
-libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
-libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
-libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
-libname ff "D:\Dropbox\WRDS\ff\sasdata";
-libname frb "D:\Dropbox\WRDS\frb\sasdata";
-libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
-libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
+libname a_index "E:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
+libname a_stock "E:\Dropbox\WRDS\CRSP\sasdata\a_stock";
+libname a_treas "E:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
+libname ff "E:\Dropbox\WRDS\ff\sasdata";
+libname frb "E:\Dropbox\WRDS\frb\sasdata";
+libname mysas "E:\Dropbox\WRDS\CRSP\mysas";
+libname myOption "E:\Dropbox\WRDS\CRSP\myOption";
+libname myMacro "E:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 /*WARNING: tb_m3<0 happens occasionally. Even missing for some dates.*/
@@ -15,8 +15,13 @@ data myOption.FRB_tb3m;
     keep date tb_m3;
 run;
 
-/*proc import datafile = "D:\Dropbox\GitHub\VJRP_local\Particle\myReturn_Data\SPXSET.xlsx"*/
-proc import datafile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXSET.xlsx"
+proc expand data=myOption.FRB_tb3m out=tmp_FRB_tb3m;
+	id date;
+	convert tb_m3 / method=join;
+run;
+
+/*proc import datafile = "E:\Dropbox\GitHub\VJRP_local\Particle\myReturn_Data\SPXSET.xlsx"*/
+proc import datafile = "E:\Dropbox\GitHub\TRP\data\rawdata\SPXSET.xlsx"
 dbms = xlsx REPLACE out = myOption.SPXSET ;
 range='Sheet1$A2:B7504'; /*Range includes column names.*/
 run;
@@ -30,7 +35,7 @@ proc sql;
     from
     a_index.dsp500 as a
     left join
-    myOption.frb_tb3m as b
+    tmp_frb_tb3m as b
     on a.caldt = b.date
     left join 
     optionm.idxdvd as c

@@ -1,31 +1,31 @@
 /*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim -> SPXData_Export */
-libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
-libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
-libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
-libname ff "D:\Dropbox\WRDS\ff\sasdata";
-libname frb "D:\Dropbox\WRDS\frb\sasdata";
-libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
-libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
+libname a_index "E:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
+libname a_stock "E:\Dropbox\WRDS\CRSP\sasdata\a_stock";
+libname a_treas "E:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
+libname ff "E:\Dropbox\WRDS\ff\sasdata";
+libname frb "E:\Dropbox\WRDS\frb\sasdata";
+libname mysas "E:\Dropbox\WRDS\CRSP\mysas";
+libname myOption "E:\Dropbox\WRDS\CRSP\myOption";
+libname myMacro "E:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 /*datedif: BUS day difference.*/
-data myOption.spxcall_cmpt;
+data spxcall_cmpt;
 	set myOption.spxcall_mnth;
 	datedif = intck('weekday',date,exdate);
 	if 10 <= datedif <= 64 then output;
 run;
 
-data myOption.spxput_cmpt;
+data spxput_cmpt;
 	set myOption.spxput_mnth;
 	datedif = intck('weekday',date,exdate);
 	if 10 <= datedif <= 64 then output;
 run;
 
 proc sql;
-	create table myOption.spxCall_cmpt
+	create table spxCall_cmpt_
 	as select a.*, b.spindx, b.sprtrn, b.tb_m3, b.rate as div, b.spxset
 	from
-	myOption.spxcall_cmpt as a
+	spxcall_cmpt as a
 	left join
 	myOption.spxdata as b
 	on b.caldt = a.date;
@@ -36,10 +36,10 @@ quit;
 
 /*Below is to align SPXSET, the settlement price for SPX options.*/
 proc sql;
-	create table myOption.spxCall_cmpt
+	create table spxCall_cmpt__
 	as select a.*, b.spxset as spxset_expiry
 	from
-	myOption.spxcall_cmpt as a
+	spxCall_cmpt_ as a
 	left join
 	myOption.spxdata as b
 	/*Even if a.exdate = Saturday, match it with Friday's b.caldt data*/
@@ -50,20 +50,20 @@ quit;
 
 /*--------------Put case---------------*/
 proc sql;
-	create table myOption.spxPut_cmpt
+	create table spxPut_cmpt_
 	as select a.*, b.spindx, b.sprtrn, b.tb_m3, b.rate as div, b.spxset
 	from
-	myOption.spxput_cmpt as a
+	spxput_cmpt as a
 	left join
 	myOption.spxdata as b
 	on b.caldt = a.date ;
 quit;
 
 proc sql;
-	create table myOption.spxPut_cmpt
+	create table spxPut_cmpt__
 	as select a.*, b.spxset as spxset_expiry
 	from
-	myOption.spxput_cmpt as a
+	spxPut_cmpt_ as a
 	left join
 	myOption.spxdata as b
 	/*Even if a.exdate = Saturday, match it with Friday's b.caldt data*/
@@ -72,7 +72,7 @@ proc sql;
 quit;
 
 data myOption.spxCall_cmpt;
-	set myOption.spxCall_cmpt;
+	set spxCall_cmpt__;
 	strike_price = strike_price/1000;
 	moneyness = spindx / strike_price ;
 	mid = (best_bid + best_offer) * 0.5;
@@ -85,7 +85,7 @@ data myOption.spxCall_cmpt;
 run;
 
 data myOption.spxPut_cmpt;
-	set myOption.spxPut_cmpt;
+	set spxPut_cmpt__;
 	strike_price = strike_price/1000;
 	moneyness = spindx / strike_price ;
 	mid = (best_bid + best_offer) * 0.5;

@@ -1,12 +1,12 @@
 /*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim_2nd -> SPXData_Export */
-libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
-libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
-libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
-libname ff "D:\Dropbox\WRDS\ff\sasdata";
-libname frb "D:\Dropbox\WRDS\frb\sasdata";
-libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
-libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
+libname a_index "E:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
+libname a_stock "E:\Dropbox\WRDS\CRSP\sasdata\a_stock";
+libname a_treas "E:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
+libname ff "E:\Dropbox\WRDS\ff\sasdata";
+libname frb "E:\Dropbox\WRDS\frb\sasdata";
+libname mysas "E:\Dropbox\WRDS\CRSP\mysas";
+libname myOption "E:\Dropbox\WRDS\CRSP\myOption";
+libname myMacro "E:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 proc sql;
@@ -145,21 +145,32 @@ data myoption.spxcall_mnth_Wed_2nd; set spxcall_mnth_Wed_2nd; run;
 data myoption.spxput_mnth_Wed_2nd; set spxput_mnth_Wed_2nd; run;
 
 proc export data = myOption.exdateseries
-outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\exDateSeries.xlsx"
+outfile = "E:\Dropbox\GitHub\TRP\data\rawdata\exDateSeries.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = spxcall_mnth_Wed_2nd
-outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXCall_Mnth_2nd.xlsx"
+outfile = "E:\Dropbox\GitHub\TRP\data\rawdata\SPXCall_Mnth_2nd.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = spxput_mnth_Wed_2nd
-outfile = "D:\Dropbox\GitHub\TRP\data\rawdata\SPXPut_Mnth_2nd.xlsx"
+outfile = "E:\Dropbox\GitHub\TRP\data\rawdata\SPXPut_Mnth_2nd.xlsx"
 DBMS = xlsx REPLACE;
 run;
 
 proc export data = myOption.spxdata
-outfile = "D:\Dropbox\GitHub\TRP\data\rawData\SPXData.xlsx"
+outfile = "E:\Dropbox\GitHub\TRP\data\rawData\SPXData.xlsx"
 DBMS = xlsx REPLACE;
 run;
+
+proc export data = spxcall_mnth_Wed_2nd
+outfile = "E:\Dropbox\GitHub\TRP\data\rawdata\SPXCall_Mnth_2nd.csv"
+DBMS = csv REPLACE;
+run;
+
+proc export data = spxput_mnth_Wed_2nd
+outfile = "E:\Dropbox\GitHub\TRP\data\rawdata\SPXPut_Mnth_2nd.csv"
+DBMS = csv REPLACE;
+run;
+

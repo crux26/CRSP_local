@@ -21,6 +21,6 @@ libname TRP "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\TRP\data";
 libname XSREG "E:\Dropbox\WRDS\XSREG\sasdata";
 libname ambig "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\ambiguity_premium\data";
 libname AHXZ "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\AHXZ_2006\data";
-
+libname Barras "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\Barras_Malkhozov_2016\data";
 
 %mend liblist_dorm;
