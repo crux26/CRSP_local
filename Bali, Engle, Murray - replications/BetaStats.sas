@@ -1,28 +1,14 @@
 /* Checking done! (2017.07.06) */
+/*FactorLoadingStatsDaily -> BetaStats.*/
+
 
 /* Instead of using rrloop over all observations and selectively appending might be slower than */
 /* generating some indicator variables first and selectively doing rolling regression based on that */
 /* variables. However, couldn't find the way for the latter yet. (2017.07.06) */
 
 /* Generate datasets through <FactorLoadingStatsDaily.sas>. */
-/* Basic datasets are created there. */
-libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
-libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
-libname a_ccm "D:\Dropbox\WRDS\CRSP\sasdata\a_ccm";
-libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
-libname comp "D:\Dropbox\WRDS\comp\sasdata\naa";
-libname ff "D:\Dropbox\WRDS\ff\sasdata";
-libname frb "D:\Dropbox\WRDS\frb\sasdata";
-libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
-libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
-libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
-libname BEM "D:\Dropbox\GitHub\CRSP_local\Bali, Engle, Murray - replications";
 
-/* To automatically point to the macros in this library within your SAS program */
-options sasautos=('D:\Dropbox\GitHub\CRSP_local\myMacro\', SASAUTOS) MAUTOSOURCE;
-
-%let begdate = '03JAN1988'd;
+%let begdate = '03JAN1963'd;
 %let enddate = '31DEC2012'd;
 %let vars = ticker comnam prc vol ret shrout shrflg;
 %let mkt_index = vwretd;
@@ -85,8 +71,38 @@ proc sort data=bem.beta24m; by year month day permno; run;
 
 /*-----------------------------------------*/
 %include myMacro('ObsAvg.sas');
-%ObsAvg(data=BEM.beta1mprdcstat, out=BEM.beta1mAvgStat, by=year, drop=_TYPE_ _FREQ_);
-%ObsAvg(data=BEM.beta3mprdcstat, out=BEM.beta3mAvgStat, by=year, drop=_TYPE_ _FREQ_);
-%ObsAvg(data=BEM.beta6mprdcstat, out=BEM.beta6mAvgStat, by=year, drop=_TYPE_ _FREQ_);
-%ObsAvg(data=BEM.beta12mprdcstat, out=BEM.beta12mAvgStat, by=year, drop=_TYPE_ _FREQ_);
-%ObsAvg(data=BEM.beta24mprdcstat, out=BEM.beta24mAvgStat, by=year, drop=_TYPE_ _FREQ_);
+%ObsAvg(data=BEM.beta1mprdcstat, out=BEM.beta1mAvgStat, by=year coeff, drop=_TYPE_ _FREQ_);
+%ObsAvg(data=BEM.beta3mprdcstat, out=BEM.beta3mAvgStat, by=year coeff, drop=_TYPE_ _FREQ_);
+%ObsAvg(data=BEM.beta6mprdcstat, out=BEM.beta6mAvgStat, by=year coeff, drop=_TYPE_ _FREQ_);
+%ObsAvg(data=BEM.beta12mprdcstat, out=BEM.beta12mAvgStat, by=year coeff, drop=_TYPE_ _FREQ_);
+%ObsAvg(data=BEM.beta24mprdcstat, out=BEM.beta24mAvgStat, by=year coeff, drop=_TYPE_ _FREQ_);
+
+
+%let month_list = 1M 3M 6M 12M 24M;
+%macro loop(varlist);
+%let nVar = %sysfunc(countw(&varlist));
+%do i=1 %to &nVar.;
+%let currVar = %scan(&varlist, &i);
+
+proc means data=BEM.beta&currVar.AvgStat(where=(~(coeff="Intercept")) drop=year) noprint nway;
+output out=beta&currVar._tmp mean()=;
+run;
+
+data beta&currVar._result(drop=_TYPE_ _FREQ_);
+retain group mean StdDev skew kurt min p5 p25 median p75 p95 max n;
+set beta&currVar._tmp;
+group = "beta_&currVar.";
+run;
+
+proc sql;
+drop table beta&currVar._tmp;
+quit;
+
+%end;
+%mend loop;
+%loop(&month_list);
+
+data beta_mrgd;
+length group $ 8;
+set beta1M_result beta3M_result beta6M_result beta12M_result beta24M_result;
+run;

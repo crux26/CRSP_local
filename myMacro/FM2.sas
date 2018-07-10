@@ -1,9 +1,6 @@
 /*This is from Stoffman(https://kelley.iu.edu/nstoffma/fe.html).*/
 /*Faster than FM(). By using ODS OUTPUT for a regression, no need to DO loop over slopes of INDEPVARS. */
-%MACRO FM2(DATA=, OUT=, DATEVAR=, DEPVAR=, INDEPVARS=, LAGS=) / store des="Fama-MacBeth regression";
-    options MSTORED;
-    options SASMSTORE=myMacro;
-    
+%MACRO FM2(DATA=, OUT=, DATEVAR=, byvar=, DEPVAR=, INDEPVARS=, LAGS=) / store des="Fama-MacBeth regression";
 	%local oldoptions errors;
 	%let oldoptions=%sysfunc(getoption(mprint)) %sysfunc(getoption(notes)) %sysfunc(getoption(source));
 	%let errors=%sysfunc(getoption(errors));
@@ -19,7 +16,7 @@
 	run;
 
 	proc sort data=&DATA out=_temp;
-		by &DATEVAR;
+		by &DATEVAR &byvar.;
 	run;
 
 	proc printto;
@@ -33,7 +30,7 @@
 
 	/*EDF option useless with ODS OUTPUT*/
 	proc reg data=_temp;
-		by &DATEVAR;
+		by &DATEVAR &byvar.;
 		model &DEPVAR = &INDEPVARS;
 		ods output ParameterEstimates=pe;
 	quit;
@@ -48,13 +45,13 @@
 	Unlike Stata, this is somewhat complicated in SAS, but can be done as follows:*/
 /*Variable: Variable name which contains indepdent variables' names.*/
 	proc sort data=pe;
-		by variable;
+		by variable &byvar.;
 	run;
 
 	/*"Estimate": Reserved keyword for dataset PE.*/
 	/*"Const":  meaningless, in fact. Will be the PARAMETER's value.*/
 	proc model data=pe;
-		by variable;
+		by variable &byvar.;
 		instruments const / intonly;
 		estimate=const;
 		fit estimate / gmm kernel=(bart,%eval(&LAGS+1),0) vardef=n;

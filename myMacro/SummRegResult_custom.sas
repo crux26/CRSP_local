@@ -1,5 +1,4 @@
 /*BY: order should be year, month, date.*/
-
 /*This is because in PROC TRANSPOSE, date's format is YYYYMMDD and reads this from left to right. */
 %macro SummRegResult_custom(data=, out=, var=, by=);
     %if %sysfunc(findw("&data", '.'))=0 %then
@@ -102,17 +101,23 @@
         set &out;
         drop &drop1 &drop2;
     run;
+    
+/*    proc datasets lib=&lib_data nolist;*/
+/*        delete %sysfunc(scan(&out, -1, '.'));*/
+/*    quit;*/
 
     proc datasets lib=&lib_data nolist;
-        delete %sysfunc(scan(&out, -1, '.'));
+        delete &out.;
     quit;
-
     run;
 
-    proc datasets lib=&lib_data nolist;
-        change %sysfunc(scan(&out.2,-1,'.')) = %sysfunc(scan(&out,-1,'.'));
-    quit;
+/*    proc datasets lib=&lib_data nolist;*/
+/*        change %sysfunc(scan(&out.2,-1,'.')) = %sysfunc(scan(&out,-1,'.'));*/
+/*    quit;*/
 
+    proc datasets lib=&lib_data nolist;
+        change &out.2 = %out.;
+    quit;
     run;
 
     proc sort data = &out;

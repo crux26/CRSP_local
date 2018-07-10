@@ -10,67 +10,44 @@
 /* Variables : - INSET and OUTSET are input and output datasets                      */
 /*             - SORTVAR: sort variable used in ranking                              */
 /*             - VARS: variables to trim and winsorize                               */
-/*             - PERC1: trimming and winsorization percent, each tail (default=1%)   */
+/*             - PERC1: trimming and winsorization percent, each tail (default=0.5%)   */
 /*             - TRIM: trimming=1/winsorization=0, default=0                         */
 /* ********************************************************************************* */
-%MACRO WINSORIZE (INSET=,OUTSET=,SORTVAR=,VARS=,PERC1=1,TRIM=0);
+%MACRO WINSORIZE (INSET=,OUTSET=,SORTVAR=,VARS=,PERC1=0.5,TRIM=0);
 	/* List of all variables */
-	%let vars = %sysfunc(compbl(&vars));
-
-	/*compbl(): removes multiple blanks from a character string. */
-	%include mymacro('nwords.sas');
-	%let nvars = %nwords(&vars);
+	%let nvars = %sysfunc(countw((&vars)));
 
 	/* Display Output */
 	%put ### WINSORIZING/TRIMMING START.;
-
-	/* Trimming / Winsorization Options */
-	%if &trim=0 %then
-		%put ### Winsorization;
-	%else %put ### Trimming;
-	%put ### Number of Variables:  &nvars;
-	%put ### List of Variables:  &vars;
 	options nonotes;
 
-	/* Ranking within &sortvar levels */
-	%put ### Sorting...;
-
-	proc sort data=&inset;
+	proc sort data=&inset out=_tmp;
 		by &sortvar;
 	run;
 
 	/* 2-tail winsorization/trimming */
-	%let perc2 = %eval(100-&perc1);
-	%let var2 = %sysfunc(tranwrd(&vars,%str( ),%str(__ )))__;
-
-	/*No blank at the end of the string --> __ at the end once again*/
-	/*tranwrd(): Replaces all occurrences of a substring in a character string. */
-	/*tranwrd("aabcc", "a", "e") = eebcc */
-	%let var_p1 = %sysfunc(tranwrd(&vars,%str( ),%str(__&perc1 )))__&perc1;
-	%let var_p2 = %sysfunc(tranwrd(&vars,%str( ),%str(__&perc2 )))__&perc2;
+	%let perc2 = %sysevalf(100-&perc1);
+	%let var2 = %sysfunc(tranwrd(&vars, %str( ),%str(_ )));
+	%let var_p1 = %sysfunc(tranwrd(&vars, %str( ),%str(_&perc1 )))_&perc1;
+	%let var_p2 = %sysfunc(tranwrd(&vars, %str( ),%str(_&perc2 )))_&perc2;
+	%let var_p1 = %sysfunc(tranwrd(&var_p1, %str(.),%str(_)));
+	%let var_p2 = %sysfunc(tranwrd(&var_p2, %str(.),%str(_)));
 
 	/*No blank at the end of the string --> __&perc1 at the end once again*/
 	/* Calculate upper and lower percentiles */
-	proc univariate data=&inset noprint;
+	proc univariate data=_tmp noprint;
 		by &sortvar;
 		var &vars;
 		output out=_perc pctlpts=&perc1 &perc2 pctlpre=&var2;
-
-		/*pctlpts: 50, 95 to 100 by 2.5 */
-		/*pctlpre: percentile prefix */
 	run;
 
 	%if &trim=1 %then
 		%let condition = %str(if myvars(i)>=perct2(i) or myvars(i)<=perct1(i) then myvars(i)=. );
 	%else %let condition = %str(myvars(i)=min(perct2(i), max(perct1(i), myvars(i)) ) );
 
-	%if &trim=0 %then
-		%put ### Winsorizing at &perc1.%...;
-	%else %put ### Trimming at &perc1.%...;
-
 	/* Save output with trimmed/winsorized variables */
 	data &outset;
-		merge &inset (in=a) _perc;
+		merge _tmp (in=a) _perc;
 
 		/*a=1 if an observation is read from _perc. */
 		/*IN= dataset option: Creates a Boolean variable that indicates whether */
@@ -90,7 +67,15 @@
 		do i = 1 to &nvars;
 			if not missing(myvars(i)) then
 				do;
-					&condition;
+					if &trim.=1 then
+						do;
+							if myvars(i)>=perct2(i) or myvars(i)<=perct1(i) then
+								myvars(i)=.;
+						end;
+					else
+						do;
+							myvars(i)=min(perct2(i), max(perct1(i), myvars(i)) );
+						end;
 				end;
 		end;
 
@@ -99,7 +84,7 @@
 
 	/* House Cleaning */
 	proc sql;
-		drop table _perc;
+		drop table _perc, _tmp;
 	quit;
 
 	options notes;

@@ -2,7 +2,7 @@
 /*%include myMacro('SetDate.sas'); WILL NOT work unless */
 /*-SASINITIALFOLDER "D:\Dropbox\GitHub\CRSP_local" added to sasv9.cfg in ...\nls\en and \ko*/
 
-%let begdate = '01JAN1988'd;
+%let begdate = '01JAN1963'd;
 %let enddate = '31DEC2012'd;
 /*%let enddate = '31DEC1989'd;*/
 %let vars = ticker comnam prc ret shrout shrflg;
