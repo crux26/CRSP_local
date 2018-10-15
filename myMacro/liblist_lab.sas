@@ -24,5 +24,6 @@ libname AHXZ "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\AHXZ_2006\data";
 libname Barras "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\Barras_Malkhozov_2016\data";
 libname FF92 "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\FF_92\data";
 libname myModule "E:\Dropbox\GitHub\CRSP_local\myModule";
+libname ibes "E:\Dropbox\WRDS\ibes\sasdata";
 
 %mend liblist_lab;

@@ -13,7 +13,32 @@
 
 # MS Excel
 *.xlsx
+*.xls
+
+# CSV files
+*.csv
+
+# text files
+*.txt
+
+# PDF files
+*.pdf
 
 # graphic files
 *.png
 *.jpg
+
+# zip files
+*.zip
+
+# HTML files
+*.htm
+*.html
+# do files
+*.do
+
+# dta files
+*.dta
+
+# irf files
+*.irf

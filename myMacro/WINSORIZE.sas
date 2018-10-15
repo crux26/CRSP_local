@@ -13,9 +13,9 @@
 /*             - PERC1: trimming and winsorization percent, each tail (default=0.5%)   */
 /*             - TRIM: trimming=1/winsorization=0, default=0                         */
 /* ********************************************************************************* */
-%MACRO WINSORIZE (INSET=,OUTSET=,SORTVAR=,VARS=,PERC1=0.5,TRIM=0);
+%MACRO WINSORIZE (INSET=, OUTSET=, SORTVAR=, VARS=, PERC1=0.5, TRIM=0);
 	/* List of all variables */
-	%let nvars = %sysfunc(countw((&vars)));
+	%let nvars = %sysfunc(countw(&vars, ' '));
 
 	/* Display Output */
 	%put ### WINSORIZING/TRIMMING START.;
@@ -47,7 +47,7 @@
 
 	/* Save output with trimmed/winsorized variables */
 	data &outset;
-		merge _tmp (in=a) _perc;
+		merge _tmp(in=a) _perc;
 
 		/*a=1 if an observation is read from _perc. */
 		/*IN= dataset option: Creates a Boolean variable that indicates whether */

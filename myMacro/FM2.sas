@@ -1,6 +1,7 @@
 /*This is from Stoffman(https://kelley.iu.edu/nstoffma/fe.html).*/
 /*Faster than FM(). By using ODS OUTPUT for a regression, no need to DO loop over slopes of INDEPVARS. */
-%MACRO FM2(DATA=, OUT=, DATEVAR=, byvar=, DEPVAR=, INDEPVARS=, LAGS=) / store des="Fama-MacBeth regression";
+options mstored sasmstore=myMacro;
+%MACRO FM2(DATA=, OUT=, DATEVAR=, byvar=, DEPVAR=, INDEPVARS=, LAGS=) / store des="Fama-MacBeth";
 	%local oldoptions errors;
 	%let oldoptions=%sysfunc(getoption(mprint)) %sysfunc(getoption(notes)) %sysfunc(getoption(source));
 	%let errors=%sysfunc(getoption(errors));
@@ -12,32 +13,27 @@
 	%put ### START;
 	%put ### SORTING...PREPARING DATA FOR RUNNING FM REGRESSIONS...;
 
-	proc printto log=junk;
-	run;
-
 	proc sort data=&DATA out=_temp;
 		by &DATEVAR &byvar.;
 	run;
 
-	proc printto;
-	run;
-
 	%put ### SORTING DONE!;
 	%put ### RUNNING CROSS-SECTIONAL FM REGRESSIONS...;
-
-	proc printto log=junk;
-	run;
 
 	/*EDF option useless with ODS OUTPUT*/
 	proc reg data=_temp;
 		by &DATEVAR &byvar.;
 		model &DEPVAR = &INDEPVARS;
 		ods output ParameterEstimates=pe;
+		ods output nObs = obs(keep=date class model dependent N Label where=(Label="Number of Observations Used"));
+		ods output FitStatistics = fit(keep=date class model dependent Label2 nValue2 where=(Label2="Adj R-Sq") rename=nValue2=AdjRsq);
 	quit;
 
-	proc printto;
+	data pe;
+		merge pe obs(drop=Label) fit(drop=Label2);
+		by date class model dependent;
 	run;
-    
+  
 	%put ### RUNNING CROSS-SECTIONAL FM REGRESSIONS DONE!;
 
 	/*Since the results from this approach give a time-series,
@@ -55,15 +51,28 @@
 		instruments const / intonly;
 		estimate=const;
 		fit estimate / gmm kernel=(bart,%eval(&LAGS+1),0) vardef=n;
-		ods output ParameterEstimates=&out;
+		ods output ParameterEstimates=&out._;
 	run; quit;
 
+	proc model data=pe;
+		by variable &byvar.;
+		instruments const / intonly;
+		n = const;
+		fit n;
+		ods output ParameterEstimates = nObs;
+	run; quit;
+
+	data &out.;
+		merge &out._ nObs(keep=Variable class Estimate rename=Estimate=N);
+		by Variable class;
+	run;
+
 	proc sql;
-		drop table _temp, pe;
+		drop table _temp, pe, obs, fit, nobs, &out._;
 	quit;
 
-	ods listing;
-	ods exclude none;
-	ods graphics;
+/*	ods listing;*/
+/*	ods exclude none;*/
+/*	ods graphics;*/
 	options &oldoptions errors=&errors;
 %mend FM2;
