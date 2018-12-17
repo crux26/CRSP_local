@@ -1,4 +1,4 @@
-%macro hashmerge(largeds, smallds, byvars, extravars, outds) / store des="Hash merge.";
+%macro hashmerge(largeds, smallds, byvars, extravars, outds) / des="Faster than SQL, but dsout not sorted.";
 /*byvars, extravars: smallds variables.*/
     data &outds;
         call missing(%sepbycomma(&extravars));

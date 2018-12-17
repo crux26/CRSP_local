@@ -25,5 +25,8 @@ libname Barras "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\Barras_Malkhozov_201
 libname FF92 "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\FF_92\data";
 libname myModule "E:\Dropbox\GitHub\CRSP_local\myModule";
 libname ibes "E:\Dropbox\WRDS\ibes\sasdata";
+libname BBT "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\BBT_2017\data";
+libname BBG "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\BBG_2018\data";
+libname HW17 "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\HW_2017\sasdata";
 
 %mend liblist_dorm;

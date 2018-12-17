@@ -65,10 +65,10 @@ libname myMacro "D:\Dropbox\SAS_scripts\myMacro";
    
 /* Calculating Market-to-Book using Compustat only                             */
 /* Advantage: captures many firms that are in Compustat, but not in CRSP       */
-%let begdate=01jan1962; %let enddate=31dec2016;
+%let begdate=01jun1983; %let enddate=31dec2012;
 /*%let begdate=01jan2008; %let enddate=31dec2015;*/
-%let comp=mysas; 
-%let crsp=mysas;
+%let comp=comp; 
+%let crsp=a_stock;
 /* Standard Compustat Filter*/
 %let comp_filter=consol='C' and indfmt='INDL' and datafmt='STD' and popsrc='D';
 %let ind=10; *number of FF industries for which to compute median M/B ratio;

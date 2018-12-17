@@ -1,4 +1,4 @@
-%macro sepbycomma(varlist) / store des="Used in %HASHMERGE().";
+%macro sepbycomma(varlist) / des="Used in %HASHMERGE().";
     %let delim=%str( );
     %let outputvar=%qscan(&varlist, 1, &delim);
 /*%QSCAN(arg,n<,delimiters>): masks special characters and mnemonic operators in its result.*/

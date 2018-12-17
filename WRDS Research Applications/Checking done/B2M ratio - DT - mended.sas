@@ -1,15 +1,14 @@
-/* Checking done! (2017.08.28) */
+/* Checking done! (2018.11.16) */
 /* This yields a lot more nonmissing data than "B2M ratio - FF.sas". */
 /* Too many are considered as missing using "B2M ratio - FF.sas". */
-
+/*Using either csho or csho_ld1 is not wrong. prcc_c is measured at DEC, whereas csho is not.*/
+/*prcc_c is in the middle of each fyear, not the end.*/
 /* Note that w/o trim/winsorizing, there are explosions in BM (ex: gvkey=003066, permno=. BM_COMP=286396).*/
 /* Also note that firms with nonsensical BM usually do not have PERMNO.*/
-
 /*Deleted my comments. Refer to "B2M ratio - DT" for details.*/
 /*Now ME is calendar year's DEC value, no matter what fiscar year-end month is.*/
 /*All I have to do is to match this cal year t's values with cal year (t+1)'s June through cal year (t+2)'s May.*/
 /*This won't be done here, but implementation step.*/
-
 /*fic: contains many countries - 30-40. Use fic in ('USA', 'CAN') for North America. */
 /*curcd: {'USD', 'CAD'} */
 /* *************************************************************************** */
@@ -41,7 +40,7 @@
 /* *************************************************************************** */
 /* Calculating Market-to-Book using Compustat only                             */
 /* Advantage: captures many firms that are in Compustat, but not in CRSP       */
-%let bdate=01jan1987;
+%let bdate=01jun1983;
 %let edate=31dec2012;
 %let comp=comp;
 %let crsp=a_stock;
@@ -52,9 +51,10 @@
 
 /* Step 1. Create Book Equity (BE) measure                                     */
 data comp_extract;
-/*data comp_extract/view=comp_extract;*/
+	/*data comp_extract/view=comp_extract;*/
 	set &comp..funda;
-/*	where (at>0 or not missing(sale)) and &comp_filter and fic in ('USA');*/
+
+	/*	where (at>0 or not missing(sale)) and &comp_filter and fic in ('USA');*/
 	where (at>0 or not missing(sale)) and &comp_filter and fic in ('USA', 'CAN');
 	calyear=year(datadate);
 
@@ -77,39 +77,46 @@ proc sort data=comp_extract;
 	by gvkey curcd datadate;
 run;
 
-proc printto log=junk; run;
+proc printto log=junk_DT;
+run;
+
 options nonotes;
+
 proc expand data=comp_extract out=comp_extract_;
 	id datadate;
 	convert prcc_c = prcc_c_ld1 / transformout=(reverse lag 1 reverse);
-	convert prcc_f = prcc_f_ld1 / transformout=(reverse lag 1 reverse);
 	convert csho = csho_ld1 / transformout=(reverse lag 1 reverse);
 	by gvkey curcd;
 run;
-options notes;
-proc printto; run;
 
-/*If fyr b/w [1,5], then prcc_c, csho is from last Dec. Should match fyr with this Dec's ME, so using lead1.*/
-data comp_extract__(drop=prcc_c_ld1 prcc_f_ld1 csho csho_ld1);
+options notes;
+
+proc printto;
+run;
+
+/*If fyr b/w [1,5], then prcc_c is from last Dec. Should match fyr with this calyear Dec's ME, so using lead1.*/
+/*--> This is because ME in BE/ME is measured at the end of December of any given year.*/
+data comp_extract__(drop=prcc_c_ld1 csho_ld1);
 	set comp_extract_;
 
 	if 1 <= fyr <=5 then
 		do;
 			prcc_c = prcc_c_ld1;
-			prcc_f = prcc_f_ld1;
 			csho = csho_ld1;
 		end;
-		mcap_c = prcc_c*csho;
+	if csho<=0 then mcap_c = .;
+	else mcap_c = abs(prcc_c)*csho;
 	label mcap_c="prcc_c*csho. Market Value of Equity at Dec end of calendar year t";
 	label prcc_c="Calyear t's DEC value. Different from COMPUSTAT (last DEC's value if fyr b/w 1, 5)";
-	label prcc_f="Calyear t's DEC value. Different from COMPUSTAT (last DEC's value if fyr b/w 1, 5)";
-	label csho="Calyear t's DEC value. Different from COMPUSTAT (last DEC's value if fyr b/w 1, 5)";
+	label prcc_f="Same as comp.secm.prccm(datadate), no matter what (fyear, fyr) is.";
+	label csho="Same as comp.funda.csho(datdate), no matter what (fyear, fyr) is.";
 run;
 
 proc sql;
 	create table comp_be 
 		as select  
-			a.gvkey, a.calyear, a.fyr, a.datadate, a.fyear, a.mcap_c, 
+			a.gvkey, a.calyear, a.fyr, a.datadate, a.fyear, a.mcap_c,
+			a.csho,
 			a.prcc_f, a.prcc_c, sum(a.BE0, a.TXDITC, -b.PRBA) as BE, a.curcd, a.fic, a.sich 
 		from comp_extract__ as a 
 			left join  
@@ -119,76 +126,66 @@ quit;
 
 /* Step 2: calculate the market value as of calendar year t's Dec end.*/
 /*SECM.datadate: Calendar date.*/
-data mvalue;
-	set &comp..secm;
-
-/*	where month(datadate)=12 and primiss='P' and fic='USA'*/
-	where month(datadate)=12 and primiss='P' and fic in ('USA', 'CAN')
-		and "&bdate"d<=datadate<="&edate"d;
-/*	mcap_dec=prccm*cshoq;*/
-/*	rename prccm=prc_dec;*/
-/*	keep gvkey datadate prccm curcdm mcap_dec fic;*/
-	keep gvkey datadate prccm curcdm cshoq fic;
-run;
-
-/*Some duplicates exist; seem to be due to data error.*/
-proc sort data=mvalue nodupkey;
+proc sort data=&comp..secm(where=( primiss='P' and fic in ('USA', 'CAN') and "&bdate"d<=datadate<="&edate"d) keep= gvkey iid datadate prccm curcdm cshoq fic primiss sortedby=gvkey iid datadate)
+	out=secm(drop=iid primiss);
 	by gvkey curcdm datadate;
 run;
 
+/**/
 proc printto log=junk;
 run;
 
-options nonotes;
-
-proc expand data=mvalue out=mvalue_;
+proc expand data=secm out=mvalue;
 	id datadate;
-	convert prccm = prccm_ld1 / transformout=(reverse lag 1 reverse);
-	convert cshoq = cshoq_ld1 / transformout=(reverse lag 1 reverse);
+	convert cshoq / method=step;
 	by gvkey curcdm;
-run;
-
-options notes;
 
 proc printto;
 run;
 
-data mvalue__(drop=prccm_ld1 cshoq_ld1);
-	set mvalue_;
+/**/
+data mvalue_;
+	set mvalue;
+	where month(datadate)=12;
+	mcap_dec = prccm*cshoq;
+	rename prccm = prc_dec;
+	label mcap_dec="prccm*cshoq, from comp.secm. Alternative to mcap_c. Use it only when missing(mcap_c)";
+	keep gvkey datadate prccm curcdm cshoq mcap_dec fic;
+run;
 
-	if 1<= fyr <=5 then
-		do;
-			prccm = prccm_ld1;
-			cshoq = cshoq_ld1;
-		end;
-		mcap_dec = prccm*cshoq;
-		rename prccm = prc_dec;
-		label mcap_dec="prccm*cshoq. Alternative to mcap_c. Use it only when missing(mcap_c)";
+/*Some duplicates exist; seem to be due to data error.*/
+proc sort data=mvalue_ nodupkey;
+	by gvkey curcdm datadate;
 run;
 
 /* Step 3a. Create Book to Market (BM) ratios using COMPUSTAT only.   */
+/*More obs with (be>0)*be/mcap_c (which are from comp.funda).*/
 proc sql;
 	create table bm_comp 
 		as select a.gvkey, a.datadate format date9., a.calyear, a.fyr, a.fyear,  
-			a.prcc_f, a.prcc_c, b.prc_dec, a.curcd, a.fic, a.sich, 
+			a.prcc_f, a.prcc_c, b.prc_dec, c.prccm,
+			a.curcd, a.fic, a.sich, 
+			a.csho, b.cshoq,
 			a.be, a.mcap_c, b.mcap_dec, mdy(12,31,a.fyear) as fyear_end format=date9.,  
 			coalesce( ( (be>0)*be/mcap_c), ( (be>0)*be)/mcap_dec ) as bm_comp 
 		from comp_be as a 
 			left join 
-				mvalue__ as b 
-				on a.gvkey=b.gvkey and a.fyear=year(b.datadate) and a.curcd=b.curcdm and a.fic=b.fic
+				mvalue_ as b 
+				on a.gvkey=b.gvkey and a.calyear=year(b.datadate) and a.curcd=b.curcdm and a.fic=b.fic
+			left join
+				mvalue as c
+				on a.gvkey=c.gvkey and a.calyear=year(c.datadate) and a.curcd=c.curcdm and a.fic=c.fic
 			order by a.gvkey, a.curcd, a.datadate;
 quit;
 
 /* Step 3b. Alternatively, one can use Market value from CRSP as of  */
 /* Dec end of fiscal year (instead using that of COMPUSTAT). */
-
 /*Adjusted for CFACPR and CFACSHR for ME calculation in MSF.*/
 /*ALTPRC: last non-missing price in the month. missing(PRC) does not mean 0 MktCap.*/
 /*Use cal year DEC data for BM calculation.*/
 data msf;
-set a_stock.msf(keep=permno date altprc shrout cfacpr cfacshr);
-date = intnx('month', date, 0, 'end');
+	set a_stock.msf(keep=permno date altprc shrout cfacpr cfacshr);
+	date = intnx('month', date, 0, 'end');
 run;
 
 proc sql;
@@ -207,13 +204,14 @@ proc sql;
 				msf as c 
 				on 
 				b.lpermno=c.permno and intnx('year', a.datadate, 0, 'end') = c.date
-		left join
+			left join
 				(select distinct permno, siccd, exchcd, shrcd, min(namedt) as mindate,  max(nameenddt) as maxdate 
 					from a_stock.stocknames group by permno, siccd, exchcd, shrcd) as d 
 						on
-						b.lpermno=d.permno and d.mindate<=a.fyear_end<=d.maxdate
+						b.lpermno=d.permno and d.mindate<=a.datadate<=d.maxdate
 					order by a.gvkey, a.datadate, sic;
 quit;
+
 /* Step 4. Invoke FF industry classification                  */
 data bm_comp_crsp;
 	set bm_comp_crsp;
@@ -228,21 +226,20 @@ proc sort data=bm_comp_crsp;
 	by calyear ffi&ind._desc;
 run;
 
-/*proc rank data=bm_comp_crsp out=bm_comp_crsp groups=100;*/
-/*	by calyear ffi&ind._desc;*/
-/*	var bm_comp bm_crsp;*/
-/*	ranks rbm_comp rbm_crsp; */
-/*run;*/
-/**/
-/*data bm_comp_crsp;*/
-/*	set bm_comp_crsp;*/
-/**/
-/*	if rbm_comp=99 then bm_comp=.; */
-/**/
-/*		if rbm_crsp=99 then*/
-/*			bm_crsp=.;*/
-/*run;*/
+proc rank data=bm_comp_crsp out=bm_comp_crsp groups=100;
+	by calyear ffi&ind._desc;
+	var bm_comp bm_crsp;
+	ranks rbm_comp rbm_crsp; 
+run;
 
+data bm_comp_crsp;
+	set bm_comp_crsp;
+
+	if rbm_comp=99 then bm_comp=.; 
+
+		if rbm_crsp=99 then
+			bm_crsp=.;
+run;
 /* Step 6. Number of distinct companies with non-missing B/M */
 /* based on COMPUSTAT only and based on CRSP-COMPUSTAT products*/
 proc sql;
@@ -348,8 +345,7 @@ run;
 /* Clean the house*/
 proc sql;
 	drop table comparebmcov, comp_be, bmcomp, bmcrsp, bm_comp,
-		bm_comp_crsp, medians, temp, comp_extract, comp_extract_, comp_extract__, mvalue, mvalue_, mvalue__, indadjbm_DT, indadjbm_DT_, msf;
-/*	drop view comp_extract, mvalue;*/
+		bm_comp_crsp, medians, temp, comp_extract, comp_extract_, comp_extract__, mvalue, mvalue_, indadjbm_DT, indadjbm_DT_, msf, secm;
 quit;
 
 /* ********************************************************************************* */
