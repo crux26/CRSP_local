@@ -28,5 +28,6 @@ libname ibes "E:\Dropbox\WRDS\ibes\sasdata";
 libname BBT "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\BBT_2017\data";
 libname BBG "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\BBG_2018\data";
 libname HW17 "E:\Dropbox\GitHub\CRSP_local\Codes - Papers\HW_2017\sasdata";
+libname tfn "E:\Dropbox\WRDS\tfn\sasdata";
 
 %mend liblist_dorm;
