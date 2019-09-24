@@ -11,7 +11,7 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
 /*Above took 4h 19m for 1963-2016. */
 /*"date2(=min(&idate2,&sdate2))" is "Today"*/
 %macro rrloop(data= , out_ds= , model_equation= , id= , date=date ,
-			start_date= , end_date= , freq=month, step=1, n=12, regprint=noprint, minwin=);
+			start_date= , end_date= , freq=month, step=1, n=12, regprint=noprint, minwin=, noint=);
 	/*%macro rrloop(data= , out_ds= , model_equation= , id= , date=date ,*/
 	/*			start_date= , end_date= , freq=month, step=1, n=12, regprint=noprint, minwin=) / store des="Rolling regression";*/
 	* Start with empty output data sets;
@@ -92,9 +92,9 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
 			*Dates are accepted-- run loops;
 			%put RRLOOP running...;
 
-			/*            proc printto log=junk;*/
-			options nosource nosource2 nonotes;
-			run;
+            options nosource nosource2 nonotes;
+/*			proc printto log=junk new;*/
+/*			run;*/
 
 			%do %while(&idate1 <= &sdate2);
 
@@ -111,9 +111,10 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
 				* noprint to just make output set;
 				/*  %let noprint= noprint;*/
 				/*  %if %upcase(&noprint) = yes | %upcase(&noprint) = print %then %let noprint= ;*/
+
 				proc reg data=tmp outest=_outest_ds edf noprint;
 					where &date between &idate1 and %sysfunc(min(&idate2,&sdate2));
-					model &model_equation;
+					model &model_equation / &noint.;
 					&by_id;
 				run;
 
@@ -128,6 +129,7 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
 					date1 = max(&idate1, &sdate1);
 					date2 = min(&idate2, &sdate2);
 					by permno;
+/*					by &id;*/
 					format date1 date2 win_beg win_end date9.;
 
 					/*BOTH BELOW DO NOT WORK: CALCULATED variable cannot be implemented w/i that data step*/
@@ -193,9 +195,9 @@ freq=month, step=1, n=1, regprint=noprint, minwin=15);*/
 		delete tmp _all_ds _outest_ds: out_ds: date2_max;
 	quit;
 
-	/*    proc printto;*/
+/*	proc printto; run;*/
 	options source source2 notes;
-	run;
+	
 
 	%put RRLOOP done.;
 %mend rrloop;
