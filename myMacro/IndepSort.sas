@@ -342,11 +342,13 @@
 			%let vlist = &vlist_ret. &vlist_char.;
 			
 			ods results off;
-			proc means data=_IndepSort StackOdsOutput mean t n;
-				var mean n;
-				by weight &groupby. Variable rank_&var1. rank_&var2.;
-				ods output Summary=_IndepSort_mean;
-			run;
+/*			proc means data=_IndepSort StackOdsOutput mean t n;*/
+/*				var mean n;*/
+/*				by weight &groupby. Variable rank_&var1. rank_&var2.;*/
+/*				ods output Summary=_IndepSort_mean;*/
+/*			run;*/
+
+			%NW(vlist=mean n, dsin=_IndepSort, dsout=_IndepSort_mean, by=weight &groupby. Variable rank_&var1. rank_&var2., lags=&lags.);
 
 			proc sort data=_IndepSort_mean out=_IndepSort_mean;
 				by weight &groupby. Variable Variable2 rank_&var1. rank_&var2.;

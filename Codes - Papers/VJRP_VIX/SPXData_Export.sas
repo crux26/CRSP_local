@@ -1,12 +1,12 @@
 /*SPXOpprcd_Merge -> SPXData_Merge -> SPXCallPut_Merge -> SPXData_Trim -> SPXData_Export */
-libname a_index "D:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
-libname a_stock "D:\Dropbox\WRDS\CRSP\sasdata\a_stock";
-libname a_treas "D:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
-libname ff "D:\Dropbox\WRDS\ff\sasdata";
-libname frb "D:\Dropbox\WRDS\frb\sasdata";
-libname mysas "D:\Dropbox\WRDS\CRSP\mysas";
-libname myOption "D:\Dropbox\WRDS\CRSP\myOption";
-libname myMacro "D:\Dropbox\GitHub\CRSP_local\myMacro";
+libname a_index "E:\Dropbox\WRDS\CRSP\sasdata\a_indexes";
+libname a_stock "E:\Dropbox\WRDS\CRSP\sasdata\a_stock";
+libname a_treas "E:\Dropbox\WRDS\CRSP\sasdata\a_treasuries";
+libname ff "E:\Dropbox\WRDS\ff\sasdata";
+libname frb "E:\Dropbox\WRDS\frb\sasdata";
+libname mysas "E:\Dropbox\WRDS\CRSP\mysas";
+libname myOption "E:\Dropbox\WRDS\CRSP\myOption";
+libname myMacro "E:\Dropbox\GitHub\CRSP_local\myMacro";
 libname optionm "\\Egy-labpc\WRDS\optionm\sasdata";
 
 data spxdata;
@@ -17,6 +17,6 @@ if tb_m3 =. then delete;
 run;
 
 proc export data = spxdata
-outfile = "D:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXData.xlsx"
-DBMS = xlsx REPLACE;
+outfile = "E:\Dropbox\GitHub\VJRP_VIX\myReturn_Data\rawData\SPXData.csv"
+DBMS = csv REPLACE;
 run;

@@ -1,6 +1,6 @@
 /*var1, var2: sortvar*/
 /*vlist: independent variables.*/
-%macro SeqSort(dsin, dsout, var1, var2, vlist_ret, nPF1, nPF2, dsout_T=, vlist_char=, groupby=, NYSE=);
+%macro SeqSort(dsin, dsout, var1, var2, vlist_ret, nPF1, nPF2, dsout_T=, vlist_char=, groupby=, NYSE=, lags=5);
 	data tmp;
 		set &dsin.;
 		year = year(date);
@@ -342,11 +342,13 @@
 			%let vlist = &vlist_ret. &vlist_char.;
 			
 			ods results off;
-			proc means data=_SeqSort StackOdsOutput mean t n;
-				var mean n;
-				by weight &groupby. Variable rank_&var1. rank_&var2.;
-				ods output Summary=_SeqSort_mean;
-			run;
+/*			proc means data=_SeqSort StackOdsOutput mean t n;*/
+/*				var mean n;*/
+/*				by weight &groupby. Variable rank_&var1. rank_&var2.;*/
+/*				ods output Summary=_SeqSort_mean;*/
+/*			run;*/
+
+			%NW(vlist=mean n, dsin=_SeqSort, dsout=_SeqSort_mean, by=weight &groupby. Variable rank_&var1. rank_&var2., lags=&lags.);
 
 			proc sort data=_SeqSort_mean out=_SeqSort_mean;
 				by weight &groupby. Variable Variable2 rank_&var1. rank_&var2.;

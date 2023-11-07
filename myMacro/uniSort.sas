@@ -1,4 +1,5 @@
-%macro unisort(dsin, dsout, var, vlist_ret, nPF, dsout_T=, vlist_char=, groupby=, NYSE=);
+ %macro unisort(dsin, dsout, var, vlist_ret, nPF, dsout_T=, vlist_char=, groupby=, NYSE=, lags=5);
+/* lags: for NW adj.*/
 	data tmp;
 		set &dsin.;
 		year = year(date);
@@ -224,11 +225,13 @@
 				%let vlist = &vlist_ret. &vlist_char.;
 
 				ods results off;
-				proc means data=_spread____ StackOdsOutput mean t;
-					var mean n;
-					by weight &groupby. Variable rank_&var.;
-					ods output summary=_spread_mean;
-				run;
+/*				proc means data=_spread____ StackOdsOutput mean t;*/
+/*					var mean n;*/
+/*					by weight &groupby. Variable rank_&var.;*/
+/*					ods output summary=_spread_mean;*/
+/*				run;*/
+
+				%NW(vlist=mean n, dsin=_spread____, dsout=_spread_mean, by=weight &groupby. Variable rank_&var., lags=&lags.);
 
 				proc sort data=_spread_mean out=_spread_mean;
 					by weight &groupby. Variable Variable2 rank_&var.;

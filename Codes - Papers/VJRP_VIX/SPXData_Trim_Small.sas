@@ -53,12 +53,15 @@ proc sort data=myOption.spxput_mnth;
 	by date exdate descending volume;
 run;
 
+
+/*Below does not work as I intended --> Only 6 options per exdate are retained!*/
+/*(which has highest volume)*/
 data myOption.spxcall_mnth_small; set myOption.spxcall_mnth;
 by date exdate;
 id+1;
 if first.exdate then id=1;
 if id>6 then delete;
-drop id;
+/*drop id;*/
 run;
 
 data myOption.spxput_mnth_small; set myOption.spxput_mnth;
